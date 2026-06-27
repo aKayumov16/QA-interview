@@ -601,6 +601,641 @@ $(\"#loginButton\").should(driver -> {
 
 <details>    
 <summary style='font-size: 20px'><b>SQL</b></summary>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Создание и удаление таблиц</summary>
+    <p style='font-size: 14px'>
+
+## Создание таблиц в PostgreSQL
+
+| Что делаем | Как это выглядит | Коротко о нюансах |
+|------------|------------------|-------------------|
+| **Определяем схему (schema)** | `CREATE SCHEMA my_schema;`<br>`SET search_path TO my_schema;` | Таблицы по умолчанию создаются в схеме `public`, но можно менять. |
+| **Создаём таблицу** | ```sql<br/>CREATE TABLE my_table ( <br>  id          SERIAL PRIMARY KEY, <br>  name        TEXT NOT NULL, <br>  age         INT CHECK (age >= 0), <br>  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP <br>);<br>``` | - `SERIAL` → автоинкрементная колонка (создаёт последовательность).<br>- `PRIMARY KEY` → уникальный индекс + NOT NULL.<br>- `CHECK` → пользовательская валидация.<br>- `DEFAULT` → значение, если не указано. |
+| **Типы данных** | `INT, BIGINT, SERIAL, BIGSERIAL, TEXT, VARCHAR(n), CHAR(n), DATE, TIMESTAMP, BOOLEAN, NUMERIC, UUID, JSONB` | Выбирайте тип, который лучше подходит. `JSONB` хранит бинарный JSON. |
+| **Ограничения** | `UNIQUE`, `NOT NULL`, `CHECK`, `FOREIGN KEY`, `REFERENCES` | `FOREIGN KEY` может ссылаться на другую таблицу: `FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`. |
+| **Индексы (необязательно в CREATE TABLE)** | `CREATE INDEX idx_name ON my_table(name);` | Автоматически создаётся индекс для `PRIMARY KEY` и `UNIQUE`. |
+| **Параметры таблицы** | `TABLESPACE`, `WITH (OIDS=FALSE)`, `TABLESPACE` | Обычно не нужны, но полезны для больших таблиц или конкретных файловых систем. |
+| **Условие «если не существует»** | `CREATE TABLE IF NOT EXISTS my_table (...);` | Позволяет избежать ошибки, если таблица уже есть. |
+| **Наследование (нечасто используется)** | `CREATE TABLE child (LIKE parent INCLUDING ALL);` | Позволяет копировать структуру родительской таблицы. |
+
+> **Совет**: всегда задавайте `PRIMARY KEY` и/или `UNIQUE` там, где нужно гарантировать уникальность строк. Это ускорит поиск и обеспечит целостность данных.
+
+---
+
+## Удаление таблиц
+
+| Что делаем | Как это выглядит | Коротко о нюансах |
+|------------|------------------|-------------------|
+| **Удаляем таблицу** | `DROP TABLE my_table;` | Удаляет саму таблицу и все её индексы. |
+| **Условие «если существует»** | `DROP TABLE IF EXISTS my_table;` | Не генерирует ошибку, если таблица отсутствует. |
+| **Удаление с каскадом** | `DROP TABLE my_table CASCADE;` | Удаляет таблицу и все объекты, которые на неё ссылаются (вьюхи, функции, другие таблицы с FK). |
+| **Удаление без каскада** | `DROP TABLE my_table RESTRICT;` | Отклонит удаление, если есть внешние ключи или другие зависимости. |
+| **Удаление схемы** | `DROP SCHEMA my_schema CASCADE;` | Удаляет схему и все объекты внутри неё. |
+| **Проверка зависимостей** | `SELECT * FROM pg_depend WHERE refobjid = 'my_table'::regclass;` | Показывает, какие объекты зависят от таблицы. |
+
+> **Важный момент**: `DROP TABLE` **не** удаляет связанные последовательности, если вы использовали `SERIAL`. Если хотите удалить и последовательность, используйте `DROP SEQUENCE my_table_id_seq;` либо `DROP TABLE my_table CASCADE;`.
+
+---
+
+## Быстрый чек‑лист перед созданием/удалением
+
+| Проверка | Команда |
+|----------|---------|
+| Таблица уже есть? | `SELECT to_regclass('my_table');` |
+| Нужно ли удалять зависимости? | `SELECT * FROM pg_depend WHERE refobjid = 'my_table'::regclass;` |
+| Нужно ли хранить в отдельной tablespace? | `CREATE TABLESPACE ts_name LOCATION '/path';`<br>`CREATE TABLE my_table (...) TABLESPACE ts_name;` |
+
+---
+
+### Кратко
+
+1. **Создаём таблицу** – `CREATE TABLE`, указываем колонки, типы, ограничения.
+2. **Опционально** – `IF NOT EXISTS`, указываем схему, таблисвпейс, наследование.
+3. **Удаляем** – `DROP TABLE`, добавляем `IF EXISTS`, `CASCADE`/`RESTRICT`.
+4. **Управляем зависимостями** – проверяем `pg_depend`, используем `CASCADE` при необходимости.
+    </p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Простые операторы</summary>
+    <p style='font-size: 14px'>
+
+## Простые операторы SELECT в PostgreSQL
+*(без `JOIN`, `GROUP BY`, агрегатных функций и сложных подзапросов)*
+
+Ниже – краткое руководство по основным конструкциям, которые обычно встречаются в простых запросах.  
+Все примеры используют таблицу **`employees`**:
+
+```sql
+CREATE TABLE employees (
+    id          SERIAL PRIMARY KEY,
+    first_name  TEXT,
+    last_name   TEXT,
+    age         INT,
+    salary      NUMERIC,
+    department  TEXT
+);
+```
+
+---
+
+### 1. `WHERE` – фильтрация строк
+```sql
+SELECT * FROM employees
+WHERE age > 30
+  AND department = 'Sales';
+```
+
+* **NULL‑значения**
+  ```sql
+  WHERE department IS NULL          -- только строки без отдела
+  WHERE department IS NOT NULL
+  ```
+* **Операторы сравнения**  
+  `=`, `<>`, `!=`, `<`, `>`, `<=`, `>=`
+* **`IN` / `NOT IN`**
+  ```sql
+  WHERE department IN ('HR', 'IT')
+  ```
+* **`BETWEEN`** (см. ниже)
+* **`LIKE` / `ILIKE`** (см. ниже)
+* **`IS DISTINCT FROM / IS NOT DISTINCT FROM`**  
+  безопасный способ сравнения с `NULL`
+
+---
+
+### 2. `LIKE` – шаблонное сравнение строк
+```sql
+SELECT * FROM employees
+WHERE last_name LIKE 'S%';          -- заканчивается на S
+```
+
+| Оператор | Пояснение | Пример |
+|----------|-----------|--------|
+| `%` | Любое количество символов (включая 0) | `S%` – любые фамилии, начинающиеся на S |
+| `_` | Один любой символ | `S__` – любые фамилии из 3 букв, начинающиеся на S |
+| `ESCAPE` | Указываем символ‑экранирование | `LIKE 'C\\_%' ESCAPE '\\'` – буква `C` + символ `_` + любые символы |
+| `ILIKE` | То же, но без учёта регистра | `WHERE last_name ILIKE 's%'` |
+| `SIMILAR TO` | Похожий на `REGEXP` | `WHERE last_name SIMILAR TO 'S[aeiou]%'` |
+
+---
+
+### 3. `BETWEEN` – диапазон
+```sql
+SELECT * FROM employees
+WHERE age BETWEEN 25 AND 35;      -- 25 ≤ age ≤ 35
+```
+
+* Включительно: границы входят.
+* Можно использовать в `NOT BETWEEN`.
+
+---
+
+### 4. `ORDER BY` – сортировка
+```sql
+SELECT * FROM employees
+ORDER BY age DESC, last_name ASC;
+```
+
+* **Направления**: `ASC` (по умолчанию), `DESC`
+* **NULL‑значения**
+  ```sql
+  ORDER BY salary NULLS FIRST  -- NULL‑ы будут первыми
+  ORDER BY salary NULLS LAST   -- NULL‑ы будут последними
+  ```
+* **Сортировка по алиасу**
+  ```sql
+  SELECT age, salary, age*salary AS product
+  FROM employees
+  ORDER BY product DESC;
+  ```
+* **Сортировка в нескольких колонках** – перечисление через запятую.
+
+---
+
+### 5. `LIMIT` и `OFFSET` – ограничение количества строк
+```sql
+SELECT * FROM employees
+ORDER BY id
+LIMIT 10;            -- первые 10 строк
+```
+
+```sql
+SELECT * FROM employees
+ORDER BY id
+LIMIT 10 OFFSET 20;  -- 21‑30 строка
+```
+
+* `OFFSET` может быть 0 (по умолчанию).
+* `LIMIT 0` возвращает пустой набор.
+* `LIMIT ALL` (по умолчанию) – без ограничения.
+
+---
+
+### 6. `DISTINCT` – уникальные строки
+```sql
+SELECT DISTINCT department FROM employees;
+```
+
+* Можно использовать с несколькими колонками:  
+  `SELECT DISTINCT department, salary FROM employees;`
+
+---
+
+### 7. `SELECT`‑выражения (подзапросы в `WHERE`)
+```sql
+SELECT * FROM employees
+WHERE salary > (
+    SELECT AVG(salary) FROM employees
+);
+```
+
+* Подзапрос может возвращать скалярное значение (`SELECT ... LIMIT 1`) или набор строк (`IN`).
+
+---
+
+### 8. `NOT` – отрицание
+```sql
+SELECT * FROM employees
+WHERE NOT department = 'HR';
+-- то же самое:
+SELECT * FROM employees
+WHERE department <> 'HR';
+```
+
+---
+
+### 9. `OR` / `AND` – логические операторы
+```sql
+SELECT * FROM employees
+WHERE (age < 25 OR age > 60)
+  AND department = 'IT';
+```
+
+* Приоритет `AND` выше `OR`; можно использовать скобки для ясности.
+
+---
+
+### 10. Регулярные выражения (необязательно, но полезно)
+```sql
+SELECT * FROM employees
+WHERE last_name ~ '^S';          -- начинается с S (регистрозависимый)
+WHERE last_name ~* '^s';         -- начинается с s (регистронезависимый)
+```
+
+* `~` – регистрозависимое совпадение
+* `~*` – регистронезависимое
+* `!~` / `!~*` – отрицание
+
+---
+
+## Краткое резюме
+
+| Оператор | Что делает | Ключевые особенности |
+|----------|------------|----------------------|
+| `WHERE` | Фильтрует строки | NULL‑сравнение, `IN`, `BETWEEN`, `LIKE`, `SIMILAR TO`, `REGEXP` |
+| `LIKE` | Шаблонное сравнение | `%`, `_`, `ESCAPE`, `ILIKE` |
+| `BETWEEN` | Диапазон | Включительно |
+| `ORDER BY` | Сортировка | `ASC/DESC`, `NULLS FIRST/LAST`, сортировка по алиасу |
+| `LIMIT` / `OFFSET` | Ограничение | `LIMIT 0`, `OFFSET 0` |
+| `DISTINCT` | Уникальные строки | С несколькими колонками |
+| `NOT` | Отрицание | `<>`, `NOT IN`, `NOT BETWEEN` |
+| `OR` / `AND` | Логика | Приоритет, скобки |
+| Регулярные выражения | Сложные шаблоны | `~`, `~*`, `!~`, `!~*` |
+ </p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>JOIN, GROUP BY и агрегирующии функции</summary>
+    <p style='font-size: 14px'>
+
+## 1. JOIN‑ы в PostgreSQL
+
+| Тип | Синтаксис | Что делает |
+|-----|-----------|------------|
+| **INNER JOIN** (по умолчанию) | `FROM a JOIN b ON a.id = b.a_id` | Возвращает только совпадающие строки. |
+| **LEFT/LEFT OUTER JOIN** | `FROM a LEFT JOIN b ON a.id = b.a_id` | Все строки из `a`. Если нет совпадения – `NULL` в колонках `b`. |
+| **RIGHT/RIGHT OUTER JOIN** | `FROM a RIGHT JOIN b ON a.id = b.a_id` | Всё из `b`, а `a` может быть `NULL`. |
+| **FULL OUTER JOIN** | `FROM a FULL JOIN b ON a.id = b.a_id` | Всё из обоих, `NULL` где нет совпадения. |
+| **CROSS JOIN** | `FROM a CROSS JOIN b` | Картезианский продукт (все комбинации). |
+| **NATURAL JOIN** | `FROM a NATURAL JOIN b` | Автоматически соединяет по всем колонкам с одинаковыми именами. |
+| **JOIN … USING** | `FROM a JOIN b USING (id)` | Сокращённый вариант `ON a.id = b.id`. |
+| **JOIN … LATERAL** | `FROM a JOIN LATERAL (SELECT … FROM b WHERE b.a_id = a.id) AS sub ON true` | Подзапрос может ссылаться на строки из `a`. |
+
+> **Порядок соединения**  
+> Планировщик PostgreSQL может менять порядок JOIN‑ов. Если нужен строгий порядок, оборачивайте в скобки:  
+> `FROM (a JOIN b ON …) JOIN c ON …`.
+
+> **Псевдонимы**  
+> Любой объект в `FROM` (таблица, подзапрос, CTE) может иметь псевдоним:  
+> `FROM users u JOIN orders o ON u.id = o.user_id`.
+
+---
+
+## 2. GROUP BY
+
+### Базовый синтаксис
+```sql
+SELECT col1, col2, SUM(col3) AS total
+FROM   table
+GROUP BY col1, col2;
+```
+
+* **Все неагрегированные колонки** должны быть перечислены в `GROUP BY` (или по их позициям: `GROUP BY 1, 2`).
+* Можно группировать по выражениям: `GROUP BY (first_name || ' ' || last_name)`.
+* Группировка по **композитным типам** (`ROW(col1, col2)`).
+
+> **HAVING**  
+> Фильтр после группировки:  
+> `HAVING COUNT(*) > 5`.
+
+> **ORDER BY**  
+> Можете сортировать по любому выражению, даже не включённому в SELECT, но обычно сортируют по группировочным колонкам или агрегатам.
+
+---
+
+## 3. Агрегатные функции
+
+| Функция | Что считает / возвращает | Особенности |
+|---------|--------------------------|-------------|
+| `COUNT(*)` | Кол‑во строк | Всегда считает, даже `NULL`. |
+| `COUNT(col)` | Кол‑во не‑NULL значений | |
+| `COUNT(DISTINCT col)` | Уникальные не‑NULL | |
+| `SUM(col)` | Сумма | Может использовать `FILTER (WHERE …)` |
+| `AVG(col)` | Среднее | |
+| `MIN(col)`, `MAX(col)` | Минимум/максимум | |
+
+> **FILTER** (PostgreSQL 9.4+)  
+> Позволяет агрегировать только часть строк:
+> ```sql
+> SELECT SUM(amount) FILTER (WHERE paid = true) AS paid_total
+> FROM orders;
+> ```
+
+> **DISTINCT** внутри агрегата  
+> `SUM(DISTINCT col)` – суммирует только уникальные значения.
+
+---
+
+## 4. Практические советы
+
+1. **Не используйте агрегаты в `WHERE`.** Они вычисляются после `WHERE`. Вместо этого используйте `HAVING` или оконные функции.
+2. **`GROUP BY` + `DISTINCT ON`** – не нужно, они служат разным целям.
+3. **Имена колонок** в `SELECT` после `GROUP BY` можно переименовать:
+   ```sql
+   SELECT col1 AS c1, SUM(col2) AS total
+   FROM t
+   GROUP BY col1;
+   ```
+4. **Позиции в `GROUP BY`** удобно использовать, если колонок много:
+   ```sql
+   SELECT col1, col2, SUM(col3)
+   FROM t
+   GROUP BY 1, 2;
+   ```
+   
+---
+
+### Мини‑пример
+
+```sql
+-- Считаем количество заказов и их общую сумму по каждому пользователю,
+-- включая пользователей без заказов (LEFT JOIN) и выводим обобщённые строки.
+SELECT u.id,
+       u.name,
+       COUNT(o.id)          AS orders_cnt,
+       SUM(o.total_amount)  AS total_sum
+FROM   users u
+LEFT JOIN orders o ON o.user_id = u.id
+GROUP BY ROLLUP (u.id, u.name)
+HAVING COUNT(o.id) > 0 OR GROUPING(u.id) = 1;   -- Показываем только группы с заказами и итог
+ORDER BY u.id;
+```
+
+* `ROLLUP` создаёт строку‑итог: `GROUPING(u.id)=1`.
+* `HAVING` фильтрует только нужные группы.
+
+---
+
+**Итого:**
+- **JOIN** – связывает таблицы (INNER, LEFT, RIGHT, FULL, CROSS, NATURAL, LATERAL).
+- **GROUP BY** – группирует строки, можно использовать ROLLUP/CUBE/GROUPING SETS.
+- **Агрегатные функции** – `COUNT`, `SUM`, `AVG`, `MIN`, `MAX`, `ARRAY_AGG`, `STRING_AGG`, `JSON_AGG`, `BOOL_AND`, `BOOL_OR`, `FILTER`, `DISTINCT`, оконные аналоги.
+ </p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>JSONB</summary>
+    <p style='font-size: 14px'>
+
+## Что такое `jsonb` в PostgreSQL
+
+| Что | Как работает |
+|-----|--------------|
+| **Тип данных** | Хранит JSON в *бинарном* формате (не в строке). |
+| **Преимущества** | Быстрее чтения/записи, меньше места, можно индексировать, поддерживает быстрые операции. |
+| **Особенности** | 1. Удаляет дубликаты ключей и сортирует их лексикографически. <br>2. Не сохраняет порядок ключей. <br>3. При обновлении создаётся **новый** объект (не‑in‑place). <br>4. Можно хранить `null`‑значения. |
+
+---
+
+## Основные операторы
+
+| Оператор | Что делает | Пример |
+|----------|------------|--------|
+| `->` | Возвращает JSON‑значение как `jsonb`. | `data->'address'` |
+| `->>` | Возвращает JSON‑значение как текст. | `data->>'city'` |
+| `#>` | Возвращает вложенный объект/массив по пути (массив индексов/ключей). | `data#>'{address,street}'` |
+| `#>>` | Как `#>` но как текст. | `data#>>'{address,zip}'` |
+| `||` | Конкатенация/слияние двух `jsonb`. | `data || '{\"age\":30}'` |
+| `@>` | Проверяет, содержит ли левый `jsonb` правый. | `data @> '{\"name\":\"John\"}'` |
+| `<@` | Проверяет, содержится ли левый `jsonb` в правом. | `data <@ '{\"name\":\"John\",\"age\":30}'` |
+| `?` | Проверка наличия ключа. | `data ? 'name'` |
+| `?|` | Проверка наличия **любого** из ключей. | `data ?| array['name','age']` |
+| `?&` | Проверка наличия **всех** указанных ключей. | `data ?& array['name','age']` |
+| `@?` | JSONPath‑поиск (требует `jsonb_path_ops` или `jsonb_ops`). | `data @? '$.address.street'` |
+| `@@` | Текстовый поиск по JSONPath. | `data @@ '$.address.street ? (@ like_regex \".*Main.*\")'` |
+
+---
+
+## Полезные функции
+
+| Функция | Зачем | Пример |
+|---------|-------|--------|
+| `jsonb_each(jsonb)` | Возвращает пары `key, value` как строки | `SELECT * FROM jsonb_each(data)` |
+| `jsonb_each_text(jsonb)` | То же, но значения как `text` | `SELECT * FROM jsonb_each_text(data)` |
+| `jsonb_object_keys(jsonb)` | Список ключей | `SELECT jsonb_object_keys(data)` |
+| `jsonb_array_elements(jsonb)` | Разворачивает массив | `SELECT * FROM jsonb_array_elements(data)` |
+| `jsonb_array_length(jsonb)` | Длина массива | `SELECT jsonb_array_length(data->'items')` |
+| `jsonb_typeof(jsonb)` | Возвращает тип (`object`, `array`, `string`, `number`, `boolean`, `null`) | `SELECT jsonb_typeof(data)` |
+| `jsonb_set(jsonb, path, new_value)` | Обновляет вложенное значение (возвращает новый JSON) | `SELECT jsonb_set(data, '{address,zip}', '\"12345\"')` |
+| `jsonb_insert(jsonb, path, new_value, before)` | Вставляет элемент в массив | `SELECT jsonb_insert(data, '{items}', '\"new\"', false)` |
+| `jsonb_strip_nulls(jsonb)` | Удаляет все ключи с `null` | `SELECT jsonb_strip_nulls(data)` |
+| `jsonb_pretty(jsonb)` | Красивый вывод | `SELECT jsonb_pretty(data)` |
+| `jsonb_path_query(jsonb, jsonpath)` | Выполняет JSONPath‑запрос | `SELECT jsonb_path_query(data, '$.address[*].city')` |
+| `jsonb_path_exists(jsonb, jsonpath)` | Проверяет наличие результата JSONPath | `SELECT jsonb_path_exists(data, '$.address.street')` |
+
+---
+
+## Лучшие практики
+
+1. **Используйте `jsonb`, а не `json`** – быстрее, меньше места, индексируемость.
+2. **Не храните в `jsonb` только простые ключ‑значения** – если структура известна, лучше использовать обычные колонки.
+3. **Обновления**: `jsonb_set` возвращает новый объект, поэтому обновление одной записи может затронуть несколько вложенных полей – учитывайте это при расчёте нагрузки.
+4. **Индексы**: создавайте GIN‑индексы только для тех запросов, где они действительно нужны. Не создавайте индексы на каждый ключ – это быстро будет «плохим».
+5. **Проверка наличия ключа**: `?`, `?|`, `?&` работают быстрее, чем `jsonb_exists`/`jsonb_exists_any`.
+6. **JSONPath** (`@?`, `@@`) удобно для сложных запросов, но требует `jsonb_path_ops`/`jsonb_ops`. Если нужна частая проверка, лучше использовать обычные колонки.
+7. **Удаление `null`**: `jsonb_strip_nulls` полезно для экономии места.
+8. **Преобразование**: `jsonb_build_object` и `jsonb_build_array` создают JSON быстро и читаемо.
+
+---
+
+## Мини‑пример
+
+```sql
+CREATE TABLE orders (
+    id serial PRIMARY KEY,
+    data jsonb NOT NULL
+);
+
+INSERT INTO orders (data) VALUES
+('{
+    \"id\": 1,
+    \"customer\": {\"name\": \"Alice\", \"city\": \"NY\"},
+    \"items\": [
+        {\"product\":\"Book\",\"qty\":2},
+        {\"product\":\"Pen\",\"qty\":5}
+    ]
+}');
+
+-- Найти заказ, где в адресе есть город \"NY\"
+SELECT * FROM orders WHERE data->'customer'->>'city' = 'NY';
+
+-- Проверить наличие ключа \"customer\"
+SELECT * FROM orders WHERE data ? 'customer';
+
+-- Добавить новый товар
+UPDATE orders
+SET data = jsonb_set(data, '{items,2}', '{\"product\":\"Notebook\",\"qty\":1}')
+WHERE id = 1;
+
+-- Слияние с новым объектом
+UPDATE orders
+SET data = data || '{\"status\":\"shipped\"}'
+WHERE id = 1;
+
+-- Индексировать ключ \"city\" для быстрого поиска
+CREATE INDEX idx_city ON orders ((data->'customer'->>'city'));
+```
+
+---
+
+### Итог
+
+`jsonb` – мощный тип для хранения и работы с полуструктурированными данными в PostgreSQL. Он предоставляет множество операторов и функций, позволяет создавать эффективные индексы и быстро выполнять сложные запросы. Главное – правильно оценить, какие части данных действительно нужно хранить в `jsonb`, а какие лучше вынести в обычные колонки.
+    </p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Insert</summary>
+    <p style='font-size: 14px'>
+
+## INSERT в PostgreSQL – полное руководство
+
+> **Кратко**: `INSERT` добавляет строки в таблицу.  
+> **Особенности**: множественные строки, `DEFAULT`, `RETURNING`, `ON CONFLICT` (upsert), `INSERT … SELECT`, CTE‑ы, триггеры, производительность, ограничения.
+
+---
+
+### 1 Базовый синтаксис
+
+```sql
+INSERT INTO schema.table_name (col1, col2, col3)
+VALUES (val1, val2, val3);
+```
+
+* Если список колонок опущен, значения вставляются в порядке, объявленном в таблице.
+* Для каждой строки можно указать набор значений.
+
+---
+
+### 2 Множественные строки
+
+```sql
+INSERT INTO users (id, name, email)
+VALUES
+  (1, 'Alice', 'alice@example.com'),
+  (2, 'Bob',   'bob@example.com'),
+  (3, 'Carol', 'carol@example.com');
+```
+
+* Операция атомарна: либо все строки вставятся, либо ни одна (если возникнет ошибка).
+
+---
+
+### 3 `DEFAULT` и `DEFAULT VALUES`
+
+```sql
+-- Заполнить все колонки их дефолтными значениями
+INSERT INTO logs DEFAULT VALUES;
+
+-- Оставить конкретную колонку с дефолтом
+INSERT INTO users (name, email) VALUES ('Dave', DEFAULT);
+```
+
+* Полезно, когда колонка имеет `DEFAULT` выражение или автоинкремент (`SERIAL`, `IDENTITY`).
+
+---
+
+### 4 `RETURNING`
+
+```sql
+INSERT INTO orders (customer_id, total)
+VALUES (42, 99.99)
+RETURNING id, created_at;
+```
+
+* Возвращает указанные колонки из вставленных строк – удобно для получения сгенерированных ID, timestamps и т.п.
+
+---
+
+### 5 `INSERT … SELECT`
+
+```sql
+INSERT INTO archive_orders (order_id, customer_id, total, archived_at)
+SELECT id, customer_id, total, NOW()
+FROM orders
+WHERE status = 'completed';
+```
+
+* Позволяет копировать данные из одной таблицы в другую (или в ту же таблицу с фильтрацией/модификацией).
+
+---
+
+### 6 Ограничения и валидация
+
+* **NOT NULL** – вставка `NULL` в такую колонку завершится ошибкой.
+* **CHECK** – проверяет условие; вставка, нарушающая правило, отклоняется.
+* **FOREIGN KEY** – вставка строки с внешним ключом, который не существует в родительской таблице, приводит к ошибке (если не указано `ON DELETE SET NULL` и т.п.).
+* **UNIQUE / PRIMARY KEY** – конфликт обрабатывается `ON CONFLICT` или приводит к ошибке.
+
+---
+
+### 7 Транзакции
+
+* Вставка (`INSERT`) – атомарна внутри транзакции.
+* Если вы откатываете транзакцию (`ROLLBACK`), все вставленные строки удаляются.
+* При `COMMIT` изменения становятся видимыми другим сессиям.
+
+---
+
+## Пример полного сценария
+
+```sql
+-- 1. Создание таблицы
+CREATE TABLE users (
+    id          serial PRIMARY KEY,
+    name        text NOT NULL,
+    email       text UNIQUE NOT NULL,
+    created_at  timestamp with time zone DEFAULT now()
+);
+
+-- 2. Вставка одной строки
+INSERT INTO users (name, email)
+VALUES ('Alice', 'alice@example.com')
+RETURNING id;
+
+-- 3. Множественная вставка
+INSERT INTO users (name, email)
+VALUES
+  ('Bob',   'bob@example.com'),
+  ('Carol', 'carol@example.com');
+
+-- 4. Upsert: обновляем email, если ID уже есть
+INSERT INTO users (id, name, email)
+VALUES (1, 'Alice', 'alice@new.com')
+ON CONFLICT (id) DO UPDATE
+SET email = EXCLUDED.email;
+
+-- 5. INSERT FROM SELECT
+INSERT INTO users (name, email)
+SELECT name, email
+FROM temp_new_users
+WHERE email NOT LIKE '%@spam%';
+
+-- 6. COPY (пример из файла)
+COPY users (name, email) FROM '/tmp/users.csv' WITH (FORMAT csv);
+```
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Update</summary>
+    <p style='font-size: 14px'>
+
+## UPDATE в PostgreSQL – кратко и понятно
+
+| Что | Как это работает | Ключевые нюансы |
+|-----|------------------|-----------------|
+| **Базовый синтаксис** | `UPDATE table_name SET column1 = value1, column2 = value2 WHERE condition;` | Обновляется **одна** таблица за раз. |
+| **SET‑выражения** | `SET column = expression`<br>`SET (col1, col2) = (val1, val2)`<br>`SET column = DEFAULT` | Можно менять несколько колонок одновременно, использовать выражения, `DEFAULT` (значение по умолчанию), `NULL`. |
+| **WHERE** | Ограничивает строки, которые будут обновлены. | Если `WHERE` опустить – обновятся **все** строки. |
+| **RETURNING** | `... RETURNING *;` | Возвращает обновлённые строки (полностью или выбранные колонки). Полезно для получения новых значений без дополнительного `SELECT`. |
+| **LIMIT / ORDER BY** | Начиная с PostgreSQL 13: `UPDATE ... SET ... WHERE ... ORDER BY ... LIMIT n;` | Позволяет обновить только часть строк (например, первые 10). |
+| **FROM** | `UPDATE table1 SET col = t2.value FROM table2 t2 WHERE table1.id = t2.id;` | Позволяет обновлять, используя данные из другой таблицы (join). |
+| **UPDATE JSON/ARRAY** | `SET json_col = json_col || '{\"new\":\"val\"}'`<br>`SET arr_col = array_append(arr_col, 5)` | Работают обычные функции/операторы PostgreSQL. |
+| **Row‑level locks** | При UPDATE строка блокируется автоматически. | Можно явно задать `FOR UPDATE` в SELECT перед UPDATE, чтобы получить тот же lock. |
+| **Проблемы и советы** | 1. **Индексы** – используйте WHERE‑индексы, иначе обновится много строк.<br>2. **Большие обновления** – делайте в пакетах, чтобы не держать lock над множеством строк долго.<br>3. **Проверка ограничений** – все CHECK/FOREIGN‑KEY проверяются после каждой строки.<br>4. **Порядок** – если используете `ORDER BY`, будьте внимательны: порядок обновления может влиять на результаты. |
+
+### Быстрый чек‑лист
+
+| # | Что проверить/запомнить | Почему |
+|---|------------------------|--------|
+| 1 | `WHERE` обязательно, если не всё. | Иначе обновятся все строки. |
+| 2 | `RETURNING` – удобно, но не всегда нужно. | Позволяет сразу увидеть результат. |
+| 3 | `FROM` нужен, если берёте данные из другой таблицы. | Без него нельзя сделать join. |
+| 4 | `LIMIT/OFFSET` доступно только с 13‑й версии. | Нужно знать версию сервера. |
+| 5 | `DEFAULT` ставит значение по умолчанию. | Полезно, если нужно сбросить колонку. |
+| 6 | Триггеры и каскадные FK могут изменить результат. | Не забывайте о них при проектировании. |
+| 7 | Вставка + обновление – используйте `ON CONFLICT DO UPDATE`. | Это более эффективный способ upsert. |
+
+> `UPDATE` – это команда, которая меняет строки в одной таблице. Вы задаёте, какие колонки менять, какие значения им поставить, фильтруете строки через `WHERE`, а при необходимости используете `FROM`, `LIMIT`, `RETURNING` и т.д. PostgreSQL гарантирует, что операции выполняются атомарно и не портят данные, но стоит помнить про индексы, триггеры и ограничения.
+</p>
+    </details>
 </details>
 
 <details>    
