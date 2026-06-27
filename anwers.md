@@ -427,6 +427,173 @@ public class RemoteTest {
 
  </p>
     </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Ожидания в Selenium</summary>
+    <p style='font-size: 14px'>
+
+## Ожидания (Waits) в Selenium
+
+Ожидания позволяют дождаться, пока элемент станет доступен, видимым, кликабельным и т.д. Это помогает избежать ошибок `NoSuchElementException`, `ElementNotVisibleException` и т.п.
+
+| Тип ожидания | Когда использовать | Как выглядит в Java |
+|--------------|--------------------|---------------------|
+| **Implicit wait** | Когда вам нужно, чтобы *все* поиски элементов автоматически ждут до указанного времени. | `driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);` |
+| **Explicit wait** | Когда нужно дождаться конкретного условия для конкретного элемента. | `WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));` |
+| **Fluent wait** | Когда нужно настроить частоту проверки, игнорировать исключения и задать таймаут. | `Wait<WebDriver> wait = new FluentWait<>(driver).withTimeout(Duration.ofSeconds(30)).pollingEvery(Duration.ofSeconds(5)).ignoring(NoSuchElementException.class);` |
+
+---
+
+### 1. Implicit Wait
+
+```java
+WebDriver driver = new ChromeDriver();
+driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+// Теперь поиск element будет ждать до 10 сек. автоматически
+WebElement btn = driver.findElement(By.id(\"submit\"));
+```
+`Implicit wait` – это глобальная настройка драйвера, которая говорит Selenium, сколько времени он должен «потягивать» поиск элемента, прежде чем выбросить исключение `NoSuchElementException`.
+
+*Плюс:* прост в использовании.  
+*Минус:* влияет на все элементы, может замедлить тесты, не всегда предсказуемый результат.
+
+---
+
+### 2. Explicit Wait
+
+```java
+WebDriver driver = new ChromeDriver();
+WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+WebElement loginBtn = wait.until(
+        ExpectedConditions.elementToBeClickable(By.id(\"login\"))
+);
+loginBtn.click();
+```
+`Explicit Wait` – это «умное» ожидание. В отличие от `implicit wait`, которое заставляет драйвер ждать *всегда* при поиске элемента, explicit wait ждёт только тот элемент, который вам нужен, и только до тех пор, пока условие не выполнится.
+
+*Плюс:* точный контроль над тем, что и когда ждём.  
+*Минус:* нужно писать условие для каждого элемента.
+
+---
+
+### 3. Fluent Wait
+
+```java
+WebDriver driver = new ChromeDriver();
+
+Wait<WebDriver> wait = new FluentWait<>(driver)
+        .withTimeout(Duration.ofSeconds(30))      // общий таймаут
+        .pollingEvery(Duration.ofSeconds(5))     // интервал проверки
+        .ignoring(NoSuchElementException.class); // игнорируем ошибку
+
+WebElement searchBox = wait.until(driver1 ->
+        driver1.findElement(By.id(\"search\"))
+);
+searchBox.sendKeys(\"Selenium\");
+```
+`Fluent Wait` — это «умное» ожидание, потому что позволяет гибко управлять частотой проверки и исключениями, делая тесты более надёжными и быстрыми. Он особенно полезен, когда элемент появляется в разное время, а не сразу.
+> `Explicit Wait` – это просто удобный способ реализации `Fluent Wait` с предопределёнными условиями.  
+> `Fluent Wait` более гибок: вы можете задать собственный polling‑интервал, игнорировать любые исключения и писать произвольную логику ожидания.
+
+*Плюс:* гибко настраиваемое.  
+*Минус:* чуть сложнее читать.
+
+---
+
+### Полезные `ExpectedConditions`
+
+```java
+ExpectedConditions.visibilityOfElementLocated(By.cssSelector(\".loader\"))
+ExpectedConditions.invisibilityOfElementLocated(By.id(\"spinner\"))
+ExpectedConditions.elementToBeClickable(By.xpath(\"//button[text()='Submit']\"))
+ExpectedConditions.presenceOfAllElementsLocatedBy(By.className(\"item\"))
+```
+ </p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Ожидания в Selenide</summary>
+    <p style='font-size: 14px'>
+
+## Что такое ожидания в Selenide?
+
+В Selenide **ожидания** – это встроенный механизм, который автоматически ждёт, пока элемент станет доступным, видимым, кликабельным и т.д.  
+
+| Что ждём | Как пишем | Что делает |
+|----------|-----------|------------|
+| **Элемент виден** | `$(\"#login\").shouldBe(Condition.visible)` | Ждёт, пока элемент появится на странице |
+| **Элемент кликабелен** | `$(\"#login\").shouldBe(Condition.enabled)` | Ждёт, пока элемент не станет неактивным |
+| **Текст в элементе** | `$(\"#error\").shouldHave(Condition.text(\"Ошибка\"))` | Ждёт, пока текст совпадёт |
+| **Только что появился** | `$(\"#new\").should(Condition.exist)` | Ждёт, пока элемент появится в DOM |
+| **Только что исчез** | `$(\"#old\").shouldNot(Condition.exist)` | Ждёт, пока элемент исчезнет |
+
+### Как это работает
+
+1. **Внутренний таймаут** – по умолчанию 4 с (можно изменить через `Configuration.timeout`).
+2. В течение этого времени Selenide проверяет условие каждые 100 мс.
+3. Если условие выполняется – тест продолжается.
+4. Если таймаут истек – выбрасывается `WaitTimeoutException` и тест падает.
+
+### Изменяем таймаут только для одного элемента
+
+```java
+$(\"#login\")
+    .shouldBe(Condition.visible, Duration.ofSeconds(10)); // 10 сек
+```
+
+### Пример полноценного теста
+
+```java
+import static com.codeborne.selenide.Selenide.*;
+import static com.codeborne.selenide.Condition.*;
+
+public class LoginTest {
+    @Test
+    public void shouldLoginSuccessfully() {
+        // 1. Открываем страницу
+        open(\"https://example.com/login\");
+
+        // 2. Заполняем поля
+        $(\"#username\").setValue(\"user\");
+        $(\"#password\").setValue(\"pass\");
+
+        // 3. Кликаем кнопку (ждём, пока она будет кликабельна)
+        $(\"#loginBtn\").click();
+
+        // 4. Ожидаем, что появится приветствие
+        $(\"#welcome\").shouldBe(visible, Duration.ofSeconds(8));
+
+        // 5. Проверяем, что текст корректный
+        $(\"#welcome\").shouldHave(text(\"Добро пожаловать, user!\"));
+    }
+}
+```
+## Разница между `shouldBe` и `should` в Selenide
+
+| Метод | Что делает | Какой аргумент принимает | Коротко о применении |
+|-------|------------|--------------------------|---------------------|
+| `shouldBe` | Проверяет **состояние** элемента (например, видимость, наличие, активность). | `Condition` (или массив `Condition`), например `visible`, `enabled`, `text(\"Hello\")` | Используется, когда нужно убедиться, что элемент **соответствует** определённому состоянию. |
+| `should` | Проверяет **какой‑то** **условный** результат, но может принимать **пользовательские** условия, функции‑лямбды, а также `Condition` как в `shouldBe`. | `Condition` или `Condition` + `timeout`/`waitUntil` | Используется, когда нужно проверить **любое условие**, иногда с собственным таймаутом или более сложной логикой. |
+
+### Пример
+
+```java
+// 1. Проверяем, что элемент видим
+$(\"#loginButton\").shouldBe(Condition.visible);
+
+// 2. Проверяем, что у элемента текст «Войти»
+$(\"#loginButton\").shouldHave(Condition.exactText(\"Войти\"));
+
+// 3. Проверяем, что элемент содержит нужный текст, но с таймаутом 10 сек
+$(\"#loginButton\").should(Condition.text(\"Войти\"), Duration.ofSeconds(10));
+
+// 4. Пользовательское условие (например, цвет текста)
+$(\"#loginButton\").should(driver -> {
+    String color = driver.findElement(By.id(\"loginButton\")).getCssValue(\"color\");
+    return \"rgba(0, 128, 0, 1)\".equals(color);
+});
+```
+</p>
+    </details>
 </details>
 <details>    
 <summary style='font-size: 20px'><b>Java</b></summary>
@@ -438,4 +605,107 @@ public class RemoteTest {
 
 <details>    
 <summary style='font-size: 20px'><b>Наш проект</b></summary>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>CompletableFuture.runAsync в автотестах</summary>
+    <p style='font-size: 14px'>
+
+`CompletableFuture.runAsync` – это статический метод, который запускает **Runnable**‑задачу в отдельном потоке (по умолчанию в `ForkJoinPool.commonPool()`) и сразу возвращает объект `CompletableFuture<Void>`.  
+Он полезен, когда у вас есть **независимые** части автотеста, которые можно выполнять параллельно, и вы хотите сократить общее время выполнения.
+
+`runAsync` запускает задачу **без возвращаемого значения** (`void`).
+```java
+CompletableFuture<Void> future =
+        CompletableFuture.runAsync(() -> {
+            // какая‑то тяжёлая операция (например, сетевой запрос)
+            heavyOperation();
+        });
+```
+
+Плюсы для автотестов:
+
+| Преимущество | Как это помогает |
+|--------------|------------------|
+| **Параллельность** | Запускаете несколько тестов одновременно, а не последовательно. |
+| **Не блокирует основной поток** | Тестовый фреймворк может продолжать работу, пока задачи выполняются. |
+| **Удобный API** | `thenRun`, `thenAccept`, `thenCompose` – легко строить цепочки действий. |
+
+### Как дождаться завершения всех тестов
+
+```java
+CompletableFuture<Void> f1 = CompletableFuture.runAsync(() -> testA());
+CompletableFuture<Void> f2 = CompletableFuture.runAsync(() -> testB());
+CompletableFuture<Void> f3 = CompletableFuture.runAsync(() -> testC());
+
+CompletableFuture<Void> all = CompletableFuture.allOf(f1, f2, f3);
+all.join();   // ждём завершения всех
+```
+
+## Возвращаемое значение
+
+`runAsync` **не умеет возвращать результат** – он всегда `CompletableFuture<Void>`.  
+Если вам нужен результат, используйте **`supplyAsync`**:
+
+```java
+CompletableFuture<Integer> sumFuture =
+        CompletableFuture.supplyAsync(() -> {
+            // вычисляем сумму, например
+            return 2 + 3;
+        });
+
+int result = sumFuture.join();   // 5
+```
+
+### Комбинирование `runAsync` и `supplyAsync`
+
+Можно комбинировать, если сначала выполняете `void`‑задачу, а потом возвращаете результат:
+
+```java
+CompletableFuture<String> future =
+        CompletableFuture.runAsync(() -> heavyOperation())
+                         .thenApplyAsync(v -> \"Done\"); // `v` – `Void`
+
+String status = future.join();   // \"Done\"
+```
+
+### Пример автотеста с параллельными запросами и результатом
+
+```java
+@Test
+void parallelApiTests() {
+    CompletableFuture<String> login = CompletableFuture.supplyAsync(() -> {
+        // логин, возвращает токен
+        return api.login(\"user\", \"pass\");
+    });
+
+    CompletableFuture<List<User>> users = login.thenComposeAsync(token ->
+        CompletableFuture.supplyAsync(() -> api.getUsers(token))
+    );
+
+    // Ожидаем оба результата
+    CompletableFuture<Void> all = CompletableFuture.allOf(login, users);
+
+    all.join(); // тесты завершены
+
+    // Проверяем результат
+    assertEquals(\"expectedToken\", login.join());
+    assertFalse(users.join().isEmpty());
+}
+```
+
+### Полезные нюансы
+
+| Что нужно знать | Как использовать |
+|-----------------|------------------|
+| **Пул потоков** | По умолчанию `ForkJoinPool.commonPool()`. Для большего контроля: `runAsync(runnable, customExecutor)` |
+| **Обработка ошибок** | `exceptionally`, `handle` – чтобы перехватывать исключения из параллельных задач |
+| **Состояние** | Избегайте общих переменных без синхронизации – это может привести к гонкам |
+| **Тестовые фреймворки** | JUnit 5 поддерживает асинхронные тесты: `assertTimeoutPreemptively(Duration.ofSeconds(5), () -> future.join());` |
+
+### Когда НЕ стоит использовать `runAsync`
+
+- Если задача **зависит от результата предыдущей** – используйте `thenCompose`/`thenRun`.
+- Если тест **чувствителен к порядку выполнения** – параллелизм может вводить nondeterminism.
+- Если задача **многоразовна** и **не требует параллелизма** – проще оставить её синхронной.
+</p>
+    </details>
 </details>
