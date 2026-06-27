@@ -606,6 +606,503 @@ $(\"#loginButton\").should(driver -> {
 <details>    
 <summary style='font-size: 20px'><b>Наш проект</b></summary>
     <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>TestNG</summary>
+    <p style='font-size: 14px'>
+
+## Что такое TestNG?
+
+TestNG (Test Next Generation) – это фреймворк для модульного и функционального тестирования Java‑приложений.  
+Он вдохновлен JUnit, но добавляет более гибкую и мощную схему аннотаций, конфигурации и параллельного выполнения тестов.
+
+---
+
+## Ключевые аннотации
+
+| Аннотация | Что делает | Когда использовать |
+|-----------|------------|--------------------|
+| `@Test` | Описывает сам тестовый метод | В каждом тесте |
+| `@BeforeSuite` | Выполняется один раз до всех тестов в Suite | Инициализация ресурсов |
+| `@AfterSuite` | Выполняется один раз после всех тестов | Очистка ресурсов |
+| `@BeforeTest` | До каждого `<test>` в XML | Подготовка окружения |
+| `@AfterTest` | После каждого `<test>` | Очистка окружения |
+| `@BeforeClass` | До первого метода в классе | Создание объектов, которые нужны всем методам класса |
+| `@AfterClass` | После последнего метода в классе | Уничтожение общих объектов |
+| `@BeforeMethod` | До каждого тестового метода | Инициализация данных для конкретного теста |
+| `@AfterMethod` | После каждого тестового метода | Очистка данных после теста |
+| `@DataProvider` | Предоставляет данные для параметризованных тестов | Тесты с разными входными данными |
+| `@Parameters` | Читает параметры из XML | Конфигурирование тестов |
+
+---
+
+## Пример простого теста
+
+```java
+import org.testng.Assert;
+import org.testng.annotations.*;
+
+public class CalculatorTest {
+
+    private Calculator calc;
+
+    @BeforeClass
+    public void setUp() {
+        calc = new Calculator(); // простая модель калькулятора
+    }
+
+    @Test(priority = 1, description = \"Проверка сложения\")
+    public void testAdd() {
+        int result = calc.add(2, 3);
+        Assert.assertEquals(result, 5, \"Сложение 2+3 должно дать 5\");
+    }
+
+    @Test(dataProvider = \"multiplicationData\", description = \"Проверка умножения\")
+    public void testMultiply(int a, int b, int expected) {
+        int result = calc.multiply(a, b);
+        Assert.assertEquals(result, expected,
+                String.format(\"Умножение %d*%d должно дать %d\", a, b, expected));
+    }
+
+    @DataProvider(name = \"multiplicationData\")
+    public Object[][] dataProviderMethod() {
+        return new Object[][]{
+                {2, 3, 6},
+                {5, 0, 0},
+                {7, 4, 28}
+        };
+    }
+
+    @AfterClass
+    public void tearDown() {
+        calc = null; // освобождаем ресурсы
+    }
+}
+```
+
+---
+
+## Конфигурация через `testng.xml`
+
+```xml
+<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\" >
+<suite name=\"MySuite\" parallel=\"tests\" thread-count=\"2\">
+
+    <test name=\"CalculatorTests\">
+        <classes>
+            <class name=\"CalculatorTest\"/>
+        </classes>
+    </test>
+
+</suite>
+```
+
+* `parallel=\"tests\"` – параллельное выполнение разных `<test>` блоков.
+* `thread-count=\"2\"` – сколько потоков использовать.
+
+---
+
+## Параллельное тестирование
+
+TestNG позволяет запускать тесты параллельно:
+
+```java
+@Test(timeOut = 3000) // 3 сек
+public void longRunningTest() {
+    // код, который может занять до 3 секунд
+}
+```
+
+При `parallel=\"methods\"` тестовые методы будут выполняться в отдельных потоках.
+
+---
+
+## Группы тестов
+
+```java
+@Test(groups = {\"fast\", \"math\"})
+public void quickTest() { ... }
+
+@Test(groups = {\"slow\", \"api\"})
+public void longApiTest() { ... }
+```
+
+В `testng.xml` можно включать/исключать группы:
+
+```xml
+<groups>
+    <run>
+        <include name=\"fast\"/>
+    </run>
+</groups>
+```
+
+---
+
+## Выводы
+
+* **TestNG** – мощный, гибкий фреймворк для Java‑тестов.
+* Используйте аннотации для управления порядком и подготовкой/очисткой окружения.
+* Параметризованные тесты (`@DataProvider`) упрощают проверку разных наборов данных.
+* Конфигурация через XML даёт контроль над параллелизмом и группами.
+ </p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Maven</summary>
+    <p style='font-size: 14px'>
+
+## Что такое Maven?
+
+Maven – это **система управления проектами** и **сборки** для Java (и других JVM‑языков).  
+Она позволяет:
+
+1. **Организовать структуру проекта** (src/main/java, src/test/java и т.д.).
+2. **Управлять зависимостями** – библиотеками, которые нужны вашему коду.
+3. **Выполнять сборку** (компиляцию, тесты, упаковку в JAR/WAR).
+4. **Публиковать артефакты** в репозитории (Maven Central, Nexus, Artifactory).
+
+---
+
+## Стандартная структура проекта
+
+```
+my-app/
+├─ pom.xml                ← главный файл конфигурации
+├─ src/
+│  ├─ main/
+│  │  ├─ java/            ← ваш исходный код
+│  │  └─ resources/       ← статические файлы (XML, properties)
+│  └─ test/
+│     ├─ java/            ← тесты
+│     └─ resources/
+└─ target/                ← сгенерированные файлы (JAR, классы)
+```
+
+---
+
+## `pom.xml` – главный конфиг
+
+```xml
+<project xmlns=\"http://maven.apache.org/POM/4.0.0\"
+         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd\">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Базовая информация -->
+    <groupId>com.example</groupId>
+    <artifactId>my-app</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <!-- Зависимости (libraries) -->
+    <dependencies>
+        <!-- JUnit 5 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Spring Boot (если нужен) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>3.2.2</version>
+        </dependency>
+    </dependencies>
+
+    <!-- Плагины (build tools) нужны для выполнения всех реальных задач по сборке и управлению проектом -->
+    <build>
+        <plugins>
+            <!-- Компилятор Java -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.0</version>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                </configuration>
+            </plugin>
+
+            <!-- Surefire – запуск тестов -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+### Ключевые элементы
+
+| Элемент | Что делает |
+|---------|------------|
+| `groupId` | Идентификатор группы (часто пакет `com.example`). |
+| `artifactId` | Имя проекта. |
+| `version` | Версия артефакта. |
+| `packaging` | Какой файл будет создан (`jar`, `war`, `pom`). |
+| `<dependencies>` | Список зависимостей. |
+| `<build>` | Плагины, которые выполняют задачи сборки. |
+
+---
+
+## Maven‑lifecycle (цикл сборки)
+
+1. **validate** – проверить, что всё правильно (проект существует).
+2. **compile** – компиляция `src/main/java`.
+3. **test** – запуск тестов (`src/test/java`).
+4. **package** – собрать артефакт (`jar`, `war`).
+5. **install** – установить артефакт в локальный репозиторий (`~/.m2`).
+6. **deploy** – отправить артефакт в удалённый репозиторий (Nexus, Artifactory).
+
+Можно запустить конкретный этап, например:
+
+```bash
+mvn compile          # только компиляция
+mvn test             # только тесты
+mvn package          # сборка JAR
+```
+
+---
+
+## Как добавить зависимость
+
+```bash
+mvn dependency:tree   # посмотреть все зависимости
+```
+
+Если зависимость не найдена, добавьте репозиторий:
+
+```xml
+<repositories>
+    <repository>
+        <id>central</id>
+        <url>https://repo.maven.apache.org/maven2</url>
+    </repository>
+</repositories>
+```
+
+---
+
+## Быстрый старт: создаём новый проект
+
+```bash
+mvn archetype:generate \\
+  -DgroupId=com.example \\
+  -DartifactId=my-app \\
+  -DarchetypeArtifactId=maven-archetype-quickstart \\
+  -DinteractiveMode=false
+```
+
+После этого появится готовая структура проекта и `pom.xml`.
+
+---
+
+## Полезные команды
+
+| Команда | Что делает |
+|---------|------------|
+| `mvn clean` | Удалить `target/` и начать с чистого листа. |
+| `mvn package` | Собрать JAR/WAR. |
+| `mvn test` | Запустить все юнит‑тесты. |
+| `mvn dependency:tree` | Показать дерево зависимостей. |
+| `mvn -X` | Включить подробный лог (для отладки). |
+
+---
+
+## Итоги
+
+- **Maven** упрощает управление зависимостями и сборкой.
+- Главное – `pom.xml` – описание проекта, зависимостей и плагинов.
+- Стандартная структура проекта делает код понятным и совместимым с CI/CD.
+- Вопросы, связанные с Maven, обычно касаются: как добавить зависимость, как изменить фазу сборки, как работать с профилями и т.д.
+
+Если понадобится конкретный пример (например, как подключить TestNG или как настроить профиль для dev/production) – дайте знать!
+    </p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Gradle</summary>
+    <p style='font-size: 14px'>
+
+## Что такое Gradle?
+
+| Что | Как это выглядит |
+|-----|------------------|
+| **Gradle** – система сборки, которая умеет **компилировать код, собирать артефакты, запускать тесты, генерировать отчёты** и даже **публиковать** их. |
+| **DSL** (Domain‑Specific Language) – Gradle пишет **скрипты** на Groovy или Kotlin. Самый популярный – `build.gradle` (Groovy) или `build.gradle.kts` (Kotlin). |
+| **Плагины** – «модульные» расширения, которые добавляют готовые задачи: `java`, `application`, `maven-publish`, `jacoco`, `checkstyle` и т.д. |
+
+---
+
+## Структура простого `build.gradle` (Groovy)
+
+```groovy
+plugins {
+    id 'java'                // основной плагин для Java‑проектов
+    id 'application'         // позволяет запускать приложение
+}
+
+group = 'com.example'
+version = '1.0.0'
+
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
+
+repositories {
+    mavenCentral()           // где искать зависимости
+}
+
+dependencies {
+    implementation 'org.apache.commons:commons-lang3:3.12.0' // обычная зависимость
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.0' // тесты
+}
+
+application {
+    mainClass = 'com.example.Main'   // точка входа
+}
+
+tasks.test {
+    useTestNG()               // говорим Gradle, что будем использовать TestNG
+}
+```
+
+### Как запустить
+
+```bash
+./gradlew build          # собрать проект и запустить тесты
+./gradlew run            # запустить приложение (если подключён плагин application)
+./gradlew clean          # удалить все сгенерированные файлы
+```
+
+> **Gradle Wrapper** (`gradlew`/`gradlew.bat`) гарантирует, что любой, кто клонирует репозиторий, будет использовать *точно* ту же версию Gradle, что и автор проекта.  
+> Создать его можно командой: `gradle wrapper --gradle-version 8.0`.
+
+---
+
+## Основные понятия
+
+| Понятие | Что это |
+|---------|---------|
+| **Project** | единица, которую собирают (может быть корневой и подпроектами) |
+| **Task** | конкретное действие (например, `compileJava`, `test`, `jar`) |
+| **Configuration** | набор зависимостей, которые нужны для конкретного фазы сборки |
+| **Plugin** | набор задач и конфигураций, добавляемый в проект |
+| **Source Set** | группы исходных файлов (`main`, `test`) |
+
+---
+
+## Как добавить собственную задачу
+
+```groovy
+task hello {
+    doLast {
+        println 'Привет, Gradle!'
+    }
+}
+```
+
+Запустить: `./gradlew hello`.
+
+---
+
+## Мульти‑проектный билд
+
+`settings.gradle`:
+
+```groovy
+rootProject.name = 'my-app'
+include 'core', 'api', 'web'
+```
+
+Каждый подпроект имеет свой собственный `build.gradle`, но они наследуют общие настройки из `rootProject`.
+
+---
+
+## Быстродействие и кэш
+
+| Фича | Как помогает |
+|------|--------------|
+| **Gradle Daemon** | Сохраняет JVM в фоне, ускоряет последующие сборки |
+| **Incremental Build** | Пересобирает только изменённые файлы |
+| **Build Cache** | Делит кэш между машинами, экономит время в CI |
+| **Configuration on Demand** | Конфигурирует только нужные проекты |
+
+В `gradle.properties` можно включить:
+
+```properties
+org.gradle.daemon=true
+org.gradle.parallel=true
+org.gradle.caching=true
+```
+
+---
+
+## Тестирование
+
+- `tasks.test` – стандартная задача для JUnit/TestNG.
+- Можно добавить собственный набор тестов:
+
+```groovy
+task integrationTest(type: Test) {
+    description = 'Runs integration tests'
+    group = 'verification'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    useTestNG()
+}
+```
+
+Затем подключить к `check`:
+
+```groovy
+check.dependsOn integrationTest
+```
+
+---
+
+## CI/CD
+
+Для Jenkins, GitHub Actions, GitLab CI и др. достаточно добавить:
+
+```yaml
+- name: Build
+  run: ./gradlew build --no-daemon
+- name: Test
+  run: ./gradlew test
+- name: Publish## Что такое Gradle?\n\nGradle – это современный инструмент сборки (build‑tool), который заменяет Ant, Maven и другие.  \nОн использует декларативный язык Groovy (или Kotlin) для описания того, как собирать проект, какие зависимости нужны, какие тесты запускать и т.д.\n\n### Ключевые идеи\n\n| Что | Зачем |\n|-----|-------|\n| **`build.gradle`** | Файл, в котором описывается проект – плагины, зависимости, задачи. |\n| **Плагин `java`** | Добавляет стандартные задачи (`compileJava`, `test`, `jar` и т.д.). |\n| **Плагин `java-library`** | То же, но с поддержкой API/implementation разделения. |\n| **`dependencies`** | Список библиотек, которые нужны проекту. |\n| **`tasks`** | Пользовательские команды, которые можно запускать. |\n| **Gradle Wrapper (`gradlew`)** | Позволяет всегда запускать одну и ту же версию Gradle без её установки. |\n\n---\n\n## Минимальный пример: проект с TestNG\n\n### 1. Структура проекта\n\n```\nmy-test-project/\n├─ src/\n│  ├─ main/\n│  │  └─ java/\n│  └─ test/\n│     └─ java/\n│        └─ com/example/tests/\n│           └─ SampleTest.java\n├─ build.gradle\n└─ settings.gradle\n```\n\n### 2. `settings.gradle`\n\n```groovy\nrootProject.name = 'my-test-project'\n```\n\n### 3. `build.gradle`\n\n```groovy\nplugins {\n    id 'java'                 // основной плагин для Java\n    id 'application'          // если нужно создать исполняемый JAR\n}\n\ngroup = 'com.example'\nversion = '1.0.0'\n\nrepositories {\n    mavenCentral()            // поиск зависимостей в Maven Central\n}\n\ndependencies {\n    // Тестовый фреймворк TestNG\n    testImplementation 'org.testng:testng:7.7.0'\n}\n\ntasks.test {\n    useTestNG()               // говорим Gradle, что будем использовать TestNG\n    testLogging.showStandardStreams = true   // выводить stdout/stderr в консоль\n}\n```\n\n### 4. Пример теста `SampleTest.java`\n\n```java\npackage com.example.tests;\n\nimport org.testng.Assert;\nimport org.testng.annotations.Test;\n\npublic class SampleTest {\n\n    @Test\n    public void simpleAssertion() {\n        int a = 2 + 2;\n        Assert.assertEquals(a, 4, \"2 + 2 должно быть 4\");\n    }\n}\n```\n\n---\n\n## Как собрать и запустить тесты\n\n1. **Инициализировать Wrapper (один раз)**  \n\n   ```bash\n   gradle wrapper\n   ```\n\n   Это создаст скрипты `gradlew`/`gradlew.bat`.\n\n2. **Запустить сборку**  \n\n   ```bash\n   ./gradlew build\n   ```\n\n   Gradle скачает зависимости, скомпилирует код и запустит тесты.\n\n3. **Запустить только тесты**  \n\n   ```bash\n   ./gradlew test\n   ```\n\n4. **Получить отчёт**  \n\n   После выполнения `./gradlew test` в каталоге `build/reports/tests/test/index.html` появится HTML‑отчёт.\n\n---\n\n## Полезные команды\n\n| Команда | Что делает |\n|---------|------------|\n| `./gradlew clean` | Удаляет `build/` каталог |\n| `./gradlew assemble` | Собирает JAR без тестов |\n| `./gradlew check` | Запускает тесты + другие проверки (если есть) |\n| `./gradlew dependencies` | Показывает дерево зависимостей |\n| `./gradlew tasks` | Список всех доступных задач |\n\n---\n\n## Быстрый чек‑лист\n\n1. **Добавьте плагин `java`**.\n2. **Укажите репозитории** (`mavenCentral()`).\n3. **Добавьте зависимость `testImplementation 'org.testng:testng:...'`**.\n4. **В `tasks.test` включите `useTestNG()`**.\n5. **Запустите `./gradlew test`**.\n\nТеперь ваш проект готов к использованию TestNG с Gradle! 🚀
+  run: ./gradlew publish
+```
+
+Gradle автоматически определит, какие задачи нужны, и выполнит их.
+
+---
+
+## Полезные команды
+
+| Команда | Что делает |
+|---------|------------|
+| `./gradlew clean` | Удаляет `build/` каталог |
+| `./gradlew assemble` | Собирает JAR без тестов |
+| `./gradlew check` | Запускает тесты + другие проверки (если есть) |
+| `./gradlew dependencies` | Показывает дерево зависимостей |
+| `./gradlew tasks` | Список всех доступных задач |
+
+---
+
+## Итоги
+
+- **Gradle** – гибкая и быстрая система сборки для Java (и многих других языков).
+- **DSL** – Groovy/Kotlin, легко читается и расширяется.
+- **Плагины** – добавляют готовые задачи, не надо писать их вручную.
+- **Wrapper** – гарантирует совместимость версий.
+- **Кэш и Daemon** – делают сборки быстрыми даже для больших проектов.
+- **Мульти‑проект** – удобно организовать крупные проекты с несколькими модулями.
+ </p>
+    </details>
+    <details style='margin-left: 20px'>
     <summary style='font-size: 16px'>Jackson</summary>
     <p style='font-size: 14px'>
 
@@ -848,7 +1345,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 Retrofit retrofit = new Retrofit.Builder()
         .baseUrl(\"https://api.example.com/\")
-        .addConverterFactory(JacksonConverterFactory.create())
+        .addConverterFactory(JacksonConverterFactory.create(new ObjectMapper()))
         .build();
 
 ApiService api = retrofit.create(ApiService.class);
@@ -913,6 +1410,215 @@ assertEquals(\"John\", user.firstName);
 | **Параллельные запросы** | `CompletableFuture<User> future = call.enqueue(...);` |
 | **Проверка URL** | `server.takeRequest().getPath()` |
 </p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>JWT токены</summary>
+    <p style='font-size: 14px'>
+
+## JWT — что это и зачем его использовать в тестах
+
+| Что | Пояснение |
+|-----|-----------|
+| **JWT (JSON Web Token)** | Строка, состоящая из 3 частей: header, payload и signature. Она передаётся в заголовке `Authorization: Bearer <token>` и позволяет серверу удостовериться, что запрос пришёл от аутентифицированного пользователя. |
+| **Когда нужен JWT в тестах** | Чтобы проверить, что эндпоинты работают только для авторизованных пользователей (или работают и без токена). |
+| **Как получить токен** | 1️⃣ **Логин** – запрос к `/auth/login` (или любому другому эндпоинту) возвращает токен.  2️⃣ **Тестовый токен** – можно хранить в переменной, если он статичен. |
+| **Как использовать** | Подключить `OkHttp`‑интерцептор к `Retrofit`, который автоматически добавит заголовок `Authorization` к каждому запросу. |
+
+---
+
+## Мини‑пример: TestNG + Retrofit 2
+
+### 1. Maven зависимости
+
+```xml
+<dependencies>
+    <!-- Retrofit -->
+    <dependency>
+        <groupId>com.squareup.retrofit2</groupId>
+        <artifactId>retrofit</artifactId>
+        <version>2.9.0</version>
+    </dependency>
+    <dependency>
+        <groupId>com.squareup.retrofit2</groupId>
+        <artifactId>converter-gson</artifactId>
+        <version>2.9.0</version>
+    </dependency>
+
+    <!-- OkHttp -->
+    <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>okhttp</artifactId>
+        <version>4.12.0</version>
+    </dependency>
+
+    <!-- TestNG -->
+    <dependency>
+        <groupId>org.testng</groupId>
+        <artifactId>testng</artifactId>
+        <version>7.9.0</version>
+        <scope>test</scope>
+    </dependency>
+
+    <!-- JWT (для парсинга, если нужен) -->
+    <dependency>
+        <groupId>com.auth0</groupId>
+        <artifactId>java-jwt</artifactId>
+        <version>4.4.0</version>
+    </dependency>
+</dependencies>
+```
+
+### 2. API‑интерфейс
+
+```java
+interface ApiService {
+
+    // 1️⃣ Получаем токен
+    @POST(\"/auth/login\")
+    Call<AuthResponse> login(@Body LoginRequest request);
+
+    // 2️⃣ Защищённый эндпоинт
+    @GET(\"/protected/resource\")
+    Call<Resource> getProtectedResource();
+}
+```
+
+```java
+// DTO‑ы
+class LoginRequest { public String username; public String password; }
+class AuthResponse { public String token; }
+class Resource   { public String data; }
+```
+
+### 3. Интерцептор, добавляющий JWT
+
+```java
+class JwtInterceptor implements Interceptor {
+    private final Supplier<String> tokenSupplier;   // ленивый токен
+
+    JwtInterceptor(Supplier<String> tokenSupplier) {
+        this.tokenSupplier = tokenSupplier;
+    }
+
+    @Override
+    public Response intercept(Chain chain) throws IOException {
+        Request original = chain.request();
+        String token = tokenSupplier.get();
+
+        Request requestWithAuth = original.newBuilder()
+                .header(\"Authorization\", \"Bearer \" + token)
+                .build();
+
+        return chain.proceed(requestWithAuth);
+    }
+}
+```
+
+### 4. Тестовый класс TestNG
+
+```java
+@Test
+public class JwtTests {
+
+    private static final String BASE_URL = \"https://api.example.com\";
+    private ApiService api;
+    private static String jwtToken;   // хранится после логина
+
+    @BeforeClass
+    public void setup() {
+        // 1️⃣ Получаем токен один раз
+        OkHttpClient client = new OkHttpClient.Builder()
+                .build();
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .client(client)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        ApiService authApi = retrofit.create(ApiService.class);
+        LoginRequest req = new LoginRequest();
+        req.username = \"user\";
+        req.password = \"pass\";
+
+        try {
+            Response<AuthResponse> response = authApi.login(req).execute();
+            if (!response.isSuccessful() || response.body() == null) {
+                throw new RuntimeException(\"Login failed\");
+            }
+            jwtToken = response.body().token;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        // 2️⃣ Создаём Retrofit, который будет всегда ставить токен
+        OkHttpClient clientWithAuth = new OkHttpClient.Builder()
+                .addInterceptor(new JwtInterceptor(() -> jwtToken))
+                .build();
+
+        api = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .client(clientWithAuth)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(ApiService.class);
+    }
+
+    @Test
+    public void testProtectedEndpoint() throws IOException {
+        Response<Resource> resp = api.getProtectedResource().execute();
+        assertTrue(resp.isSuccessful(), \"HTTP 200 expected\");
+        assertNotNull(resp.body(), \"Response body should not be null\");
+        System.out.println(\"Got data: \" + resp.body().data);
+    }
+
+    @Test
+    public void testUnauthorizedAccess() throws IOException {
+        // создаём клиент без токена
+        OkHttpClient clientWithoutAuth = new OkHttpClient.Builder().build();
+        ApiService unauthApi = new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .client(clientWithoutAuth)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build()
+                .create(ApiService.class);
+
+        Response<Resource> resp = unauthApi.getProtectedResource().execute();
+        assertEquals(401, resp.code(), \"Should be 401 Unauthorized\");
+    }
+}
+```
+
+### 5. Что проверяем
+
+| Тест | Что проверяется |
+|------|-----------------|
+| `testProtectedEndpoint` | Токен действительно работает, эндпоинт отдаёт данные. |
+| `testUnauthorizedAccess` | Без токена сервер отвечает 401. |
+| `testExpiredToken` (не реализован в примере) | Можно добавить второй тест, где токен вручную исчерпываем и проверяем 401. |
+
+### 6. Как отладить JWT
+
+Если нужно увидеть, что внутри токена:
+
+```java
+DecodedJWT decoded = JWT.decode(jwtToken);
+System.out.println(\"Issuer: \" + decoded.getIssuer());
+System.out.println(\"Subject: \" + decoded.getSubject());
+System.out.println(\"Expiration: \" + decoded.getExpiresAt());
+```
+
+---
+
+## Кратко
+
+1. **Получаем токен** через эндпоинт логина (или берём тестовый).
+2. **Добавляем `Authorization: Bearer <token>`** в каждый запрос с помощью OkHttp‑интерцептора.
+3. **Пишем TestNG‑тесты**:
+    * с токеном – проверяем, что всё работает;
+    * без токена – проверяем, что сервер отвечает 401.
+4. При необходимости **декодируем JWT** для проверки полей (issuer, exp, sub).
+ </p>
     </details>
     <details style='margin-left: 20px'>
     <summary style='font-size: 16px'>CompletableFuture.runAsync в автотестах</summary>
