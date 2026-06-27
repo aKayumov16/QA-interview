@@ -606,21 +606,320 @@ $(\"#loginButton\").should(driver -> {
 <details>    
 <summary style='font-size: 20px'><b>Наш проект</b></summary>
     <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Jackson</summary>
+    <p style='font-size: 14px'>
+
+## Что такое Jackson?
+
+Jackson — это популярная Java‑библиотека для работы с JSON.  
+Она умеет **сериализовать** (превращать Java‑объекты в JSON) и **десериализовать** (JSON → Java‑объекты), а также предоставляет гибкие инструменты для настройки поведения.
+
+---
+
+## Ключевые компоненты
+
+| Компонент | Зачем нужен |
+|-----------|-------------|
+| `ObjectMapper` | «главный» класс, который делает сериализацию/десериализацию |
+| `JsonNode` | дерево JSON‑значений (если не нужно привязывать к POJO) |
+| `JsonSerializer` / `JsonDeserializer` | пользовательские (де)серилизаторы |
+| Аннотации (`@JsonProperty`, `@JsonIgnore`, …) | управляют поведением при (де)сериализации |
+| `JsonFactory` | низкоуровневая настройка потоков (если нужен парсер/генератор вручную) |
+
+---
+
+## Быстрый старт
+
+### 1. Maven/Gradle зависимость
+
+```xml
+<!-- Maven -->
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-databind</artifactId>
+    <version>2.17.0</version>
+</dependency>
+```
+
+```gradle
+// Gradle
+implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+```
+
+### 2. Сериализация POJO → JSON
+
+```java
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+public class User {
+    public int id;
+    public String name;
+
+    // Конструктор, геттеры/сеттеры необязательны
+}
+
+ObjectMapper mapper = new ObjectMapper();
+User user = new User();
+user.id = 1;
+user.name = \"Alice\";
+
+String json = mapper.writeValueAsString(user);
+// {\"id\":1,\"name\":\"Alice\"}
+```
+
+### 3. Десериализация JSON → POJO
+
+```java
+String json = \"{\\\"id\\\":2,\\\"name\\\":\\\"Bob\\\"}\";
+User user = mapper.readValue(json, User.class);
+// user.id == 2, user.name == \"Bob\"
+```
+
+### 4. Управление полями через аннотации
+
+```java
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class User {
+    public int id;
+
+    @JsonProperty(\"full_name\")   // В JSON будет key «full_name»
+    public String name;
+
+    @JsonIgnore                 // Поле игнорируется при (де)сериализации
+    public String password;
+}
+```
+
+### 5. Динамический JSON: `JsonNode`
+
+```java
+JsonNode tree = mapper.readTree(\"{\\\"a\\\":1,\\\"b\\\":[2,3]}\");
+int a = tree.get(\"a\").asInt();          // 1
+ArrayNode arr = (ArrayNode) tree.get(\"b\");
+int second = arr.get(1).asInt();        // 3
+```
+
+### 6. Настройка `ObjectMapper`
+
+```java
+ObjectMapper mapper = new ObjectMapper()
+        .findAndRegisterModules()          // регистрирует все доступные модули (например, для Java Time)
+        .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS) // ISO‑8601
+        .setSerializationInclusion(JsonInclude.Include.NON_NULL); // не выводить null‑значения
+```
+
+## Основные возможности
+
+| Что | Как это делается |
+|-----|------------------|
+| **Аннотации** (`@JsonProperty`, `@JsonIgnore`, `@JsonFormat` и др.) | Помещаются над полями/методами. |
+| **Переименование полей** | `@JsonProperty(\"new_name\")` |
+| **Игнорировать неизвестные поля** | `mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);` |
+| **Убирать `null` в JSON** | `mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);` |
+| **Формат дат** | `mapper.setDateFormat(new SimpleDateFormat(\"yyyy-MM-dd\"));` |
+| **Переименовать все поля в snake_case** | `mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);` |
+| **Пользовательские сериализаторы/десериализаторы** | `module.addSerializer(...) / addDeserializer(...)` |
+| **Модули** (`JavaTimeModule`, `JaxbAnnotationModule`, `KotlinModule` и др.) | `mapper.registerModule(new JavaTimeModule());` |
+
+
+---
+
+## Когда использовать кастомные (де)серилизаторы
+
+```java
+public class LocalDateSerializer extends JsonSerializer<LocalDate> {
+    @Override
+    public void serialize(LocalDate value, JsonGenerator gen, SerializerProvider serializers)
+            throws IOException {
+        gen.writeString(value.format(DateTimeFormatter.ISO_DATE));
+    }
+}
+
+public class LocalDateDeserializer extends JsonDeserializer<LocalDate> {
+    @Override
+    public LocalDate deserialize(JsonParser p, DeserializationContext ctxt)
+            throws IOException {
+        return LocalDate.parse(p.getValueAsString(), DateTimeFormatter.ISO_DATE);
+    }
+}
+
+@JsonSerialize(using = LocalDateSerializer.class)
+@JsonDeserialize(using = LocalDateDeserializer.class)
+public LocalDate birthDate;
+```
+
+---
+
+## Кратко о потоках (если нужен контроль над памятью)
+
+```java
+// Чтение большого JSON‑файла без загрузки всего в память
+JsonFactory factory = new JsonFactory();
+try (JsonParser parser = factory.createParser(new File(\"big.json\"))) {
+    while (parser.nextToken() != JsonToken.END_OBJECT) {
+        // обработка токенов
+    }
+}
+```
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Retrofit 2</summary>
+    <p style='font-size: 14px'>
+
+## Что такое Retrofit 2
+
+Retrofit – это тип‑безопасный HTTP‑клиент для Android и Java.  
+Он позволяет:
+
+1. **Определить API** как интерфейс Java.
+2. **Автоматически сериализовать/десериализовать** JSON в POJO‑ы.
+3. Работать с `Call<T>`, `Observable<T>`, `CompletableFuture<T>` и т.д.
+
+В автотестах Retrofit удобно, потому что:
+
+- Вы пишете **один** интерфейс, а не много `HttpURLConnection`.
+- В ответах сразу получаете POJO‑ы, а не строки.
+- Можно легко мокать ответы через `MockWebServer`.
+
+---
+
+## Как подключить
+
+```xml
+<!-- pom.xml -->
+<dependency>
+    <groupId>com.squareup.retrofit2</groupId>
+    <artifactId>retrofit</artifactId>
+    <version>2.9.0</version>
+</dependency>
+<dependency>
+    <groupId>com.squareup.retrofit2</groupId>
+    <artifactId>converter-jackson</artifactId>
+    <version>2.9.0</version>
+</dependency>
+```
+
+---
+
+## Пример: Получить информацию о пользователе
+
+### 1. POJO
+
+```java
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class User {
+    public int id;
+
+    @JsonProperty(\"first_name\")
+    public String firstName;
+
+    @JsonProperty(\"last_name\")
+    public String lastName;
+
+    public String email;
+}
+```
+
+> **Почему Jackson?**  
+> `@JsonProperty` позволяет задать имена полей, которые отличаются от Java‑стиля.
+
+### 2. Интерфейс API
+
+```java
+import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.Path;
+
+public interface ApiService {
+    @GET(\"users/{id}\")
+    Call<User> getUser(@Path(\"id\") int userId);
+}
+```
+
+### 3. Создание Retrofit‑клиента
+
+```java
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
+
+Retrofit retrofit = new Retrofit.Builder()
+        .baseUrl(\"https://api.example.com/\")
+        .addConverterFactory(JacksonConverterFactory.create())
+        .build();
+
+ApiService api = retrofit.create(ApiService.class);
+```
+
+### 4. Вызов в тесте
+
+```java
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class ApiTest {
+
+    @Test
+    void testGetUser() throws Exception {
+        Call<User> call = api.getUser(1);
+        User user = call.execute().body();   // синхронный вызов
+
+        assertNotNull(user);
+        assertEquals(1, user.id);
+        assertEquals(\"John\", user.firstName);
+    }
+}
+```
+
+> **Обратите внимание**
+> - `execute()` – синхронный вызов, удобен для юнит‑тестов.
+> - Если нужно асинхронно, используйте `enqueue()` и `Callback<T>`.
+
+---
+
+## Мокирование с MockWebServer
+
+```java
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+
+MockWebServer server = new MockWebServer();
+server.enqueue(new MockResponse()
+        .setBody(\"{\\\"id\\\":1,\\\"first_name\\\":\\\"John\\\",\\\"last_name\\\":\\\"Doe\\\",\\\"email\\\":\\\"john@example.com\\\"}\")
+        .setResponseCode(200));
+
+Retrofit mockRetrofit = new Retrofit.Builder()
+        .baseUrl(server.url(\"/\"))
+        .addConverterFactory(JacksonConverterFactory.create())
+        .build();
+
+ApiService mockApi = mockRetrofit.create(ApiService.class);
+User user = mockApi.getUser(1).execute().body();
+
+assertEquals(\"John\", user.firstName);
+```
+
+---
+
+## Краткие советы
+
+| Что делать | Как |
+|------------|-----|
+| **Проверка заголовков** | `call.execute().header(\"Content-Type\")` |
+| **Тестировать ошибки** | `call.execute().errorBody()` |
+| **Параллельные запросы** | `CompletableFuture<User> future = call.enqueue(...);` |
+| **Проверка URL** | `server.takeRequest().getPath()` |
+</p>
+    </details>
+    <details style='margin-left: 20px'>
     <summary style='font-size: 16px'>CompletableFuture.runAsync в автотестах</summary>
     <p style='font-size: 14px'>
 
-`CompletableFuture.runAsync` – это статический метод, который запускает **Runnable**‑задачу в отдельном потоке (по умолчанию в `ForkJoinPool.commonPool()`) и сразу возвращает объект `CompletableFuture<Void>`.  
-Он полезен, когда у вас есть **независимые** части автотеста, которые можно выполнять параллельно, и вы хотите сократить общее время выполнения.
-
-`runAsync` запускает задачу **без возвращаемого значения** (`void`).
-```java
-CompletableFuture<Void> future =
-        CompletableFuture.runAsync(() -> {
-            // какая‑то тяжёлая операция (например, сетевой запрос)
-            heavyOperation();
-        });
-```
-
+## Что такое `CompletableFuture.runAsync`
+`CompletableFuture.runAsync` – это статический метод, который запускает **Runnable**‑задачу в отдельном потоке (по умолчанию в `ForkJoinPool.commonPool()`) и сразу возвращает объект `CompletableFuture<Void>`.
 Плюсы для автотестов:
 
 | Преимущество | Как это помогает |
