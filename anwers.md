@@ -937,6 +937,14 @@ mvn archetype:generate \\
 
 ---
 
+**Gradle Wrapper** – это способ «упаковать» Gradle вместе с проектом, чтобы любой, кто работает над кодом, мог запускать сборку без установки Gradle вручную.
+
+| Что делает | Как выглядит |
+|------------|--------------|
+| **Гарантирует одинаковую версию** Gradle для всех участников | `gradlew` (Linux/macOS) / `gradlew.bat` (Windows) |
+| **Не требует установки** Gradle на машине | В репозитории проекта находятся файлы `gradle/wrapper/gradle-wrapper.jar` и `gradle/wrapper/gradle-wrapper.properties` |
+| **Облегчает CI/CD** – скрипты просто вызывают `./gradlew build` | |
+
 ## Структура простого `build.gradle` (Groovy)
 
 ```groovy
@@ -1072,7 +1080,7 @@ check.dependsOn integrationTest
   run: ./gradlew build --no-daemon
 - name: Test
   run: ./gradlew test
-- name: Publish## Что такое Gradle?\n\nGradle – это современный инструмент сборки (build‑tool), который заменяет Ant, Maven и другие.  \nОн использует декларативный язык Groovy (или Kotlin) для описания того, как собирать проект, какие зависимости нужны, какие тесты запускать и т.д.\n\n### Ключевые идеи\n\n| Что | Зачем |\n|-----|-------|\n| **`build.gradle`** | Файл, в котором описывается проект – плагины, зависимости, задачи. |\n| **Плагин `java`** | Добавляет стандартные задачи (`compileJava`, `test`, `jar` и т.д.). |\n| **Плагин `java-library`** | То же, но с поддержкой API/implementation разделения. |\n| **`dependencies`** | Список библиотек, которые нужны проекту. |\n| **`tasks`** | Пользовательские команды, которые можно запускать. |\n| **Gradle Wrapper (`gradlew`)** | Позволяет всегда запускать одну и ту же версию Gradle без её установки. |\n\n---\n\n## Минимальный пример: проект с TestNG\n\n### 1. Структура проекта\n\n```\nmy-test-project/\n├─ src/\n│  ├─ main/\n│  │  └─ java/\n│  └─ test/\n│     └─ java/\n│        └─ com/example/tests/\n│           └─ SampleTest.java\n├─ build.gradle\n└─ settings.gradle\n```\n\n### 2. `settings.gradle`\n\n```groovy\nrootProject.name = 'my-test-project'\n```\n\n### 3. `build.gradle`\n\n```groovy\nplugins {\n    id 'java'                 // основной плагин для Java\n    id 'application'          // если нужно создать исполняемый JAR\n}\n\ngroup = 'com.example'\nversion = '1.0.0'\n\nrepositories {\n    mavenCentral()            // поиск зависимостей в Maven Central\n}\n\ndependencies {\n    // Тестовый фреймворк TestNG\n    testImplementation 'org.testng:testng:7.7.0'\n}\n\ntasks.test {\n    useTestNG()               // говорим Gradle, что будем использовать TestNG\n    testLogging.showStandardStreams = true   // выводить stdout/stderr в консоль\n}\n```\n\n### 4. Пример теста `SampleTest.java`\n\n```java\npackage com.example.tests;\n\nimport org.testng.Assert;\nimport org.testng.annotations.Test;\n\npublic class SampleTest {\n\n    @Test\n    public void simpleAssertion() {\n        int a = 2 + 2;\n        Assert.assertEquals(a, 4, \"2 + 2 должно быть 4\");\n    }\n}\n```\n\n---\n\n## Как собрать и запустить тесты\n\n1. **Инициализировать Wrapper (один раз)**  \n\n   ```bash\n   gradle wrapper\n   ```\n\n   Это создаст скрипты `gradlew`/`gradlew.bat`.\n\n2. **Запустить сборку**  \n\n   ```bash\n   ./gradlew build\n   ```\n\n   Gradle скачает зависимости, скомпилирует код и запустит тесты.\n\n3. **Запустить только тесты**  \n\n   ```bash\n   ./gradlew test\n   ```\n\n4. **Получить отчёт**  \n\n   После выполнения `./gradlew test` в каталоге `build/reports/tests/test/index.html` появится HTML‑отчёт.\n\n---\n\n## Полезные команды\n\n| Команда | Что делает |\n|---------|------------|\n| `./gradlew clean` | Удаляет `build/` каталог |\n| `./gradlew assemble` | Собирает JAR без тестов |\n| `./gradlew check` | Запускает тесты + другие проверки (если есть) |\n| `./gradlew dependencies` | Показывает дерево зависимостей |\n| `./gradlew tasks` | Список всех доступных задач |\n\n---\n\n## Быстрый чек‑лист\n\n1. **Добавьте плагин `java`**.\n2. **Укажите репозитории** (`mavenCentral()`).\n3. **Добавьте зависимость `testImplementation 'org.testng:testng:...'`**.\n4. **В `tasks.test` включите `useTestNG()`**.\n5. **Запустите `./gradlew test`**.\n\nТеперь ваш проект готов к использованию TestNG с Gradle! 🚀
+- name: Publish
   run: ./gradlew publish
 ```
 
@@ -1711,6 +1719,411 @@ void parallelApiTests() {
 - Если задача **зависит от результата предыдущей** – используйте `thenCompose`/`thenRun`.
 - Если тест **чувствителен к порядку выполнения** – параллелизм может вводить nondeterminism.
 - Если задача **многоразовна** и **не требует параллелизма** – проще оставить её синхронной.
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Artemis</summary>
+    <p style='font-size: 14px'>
+
+## Как читать и отправлять сообщения в **Apache ActiveMQ Artemis** (Java)
+
+Artemis – это брокер сообщений.  
+С его помощью можно легко разослать сообщение и получить его обратно.
+
+Ниже – минимальный пример, который показывает:
+
+1. Создание соединения с брокером.
+2. Отправку (`Producer`) текстового сообщения.
+3. Получение (`Consumer`) того же сообщения.
+
+> **Важно** – убедитесь, что у вас запущен Artemis и на нём открыт нужный `queue` (или `topic`).  
+> По умолчанию в Artemis создаётся очередь `jms.queue.default`.
+
+---
+
+### 1. Добавляем зависимости
+
+```xml
+<!-- pom.xml -->
+<dependencies>
+    <!-- Artemis JMS клиент -->
+    <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>artemis-jms-client</artifactId>
+        <version>2.31.0</version>
+    </dependency>
+</dependencies>
+```
+
+---
+
+### 2. Создание подключения и отправка сообщения
+
+```java
+import jakarta.jms.*;
+
+public class ArtemisSender {
+
+    public static void main(String[] args) throws JMSException {
+        // 1. Создаём ConnectionFactory (URL можно менять под ваш broker)
+        ConnectionFactory cf = new ActiveMQConnectionFactory(
+                \"tcp://localhost:61616\"); // адрес брокера
+
+        // 2. Создаём соединение
+        try (Connection connection = cf.createConnection()) {
+            connection.start();                       // включаем поток сообщений
+
+            // 3. Создаём сессию (auto-commit)
+            try (Session session = connection.createSession(
+                    Session.AUTO_ACKNOWLEDGE)) {
+                // 4. Получаем очередь (или создаём, если её нет)
+                Destination dest = session.createQueue(\"my.queue\");
+
+                // 5. Создаём Producer
+                MessageProducer producer = session.createProducer(dest);
+
+                // 6. Создаём текстовое сообщение
+                TextMessage msg = session.createTextMessage(
+                        \"Привет, Artemis!\");
+
+                // 7. Отправляем сообщение
+                producer.send(msg);
+                System.out.println(\"Сообщение отправлено\");
+            }
+        }
+    }
+}
+```
+
+---
+
+### 3. Чтение сообщения
+
+```java
+import jakarta.jms.*;
+
+public class ArtemisReceiver {
+
+    public static void main(String[] args) throws JMSException {
+        ConnectionFactory cf = new ActiveMQConnectionFactory(
+                \"tcp://localhost:61616\");
+
+        try (Connection connection = cf.createConnection()) {
+            connection.start();
+
+            try (Session session = connection.createSession(
+                    Session.AUTO_ACKNOWLEDGE)) {
+                Destination dest = session.createQueue(\"my.queue\");
+
+                // Создаём Consumer
+                MessageConsumer consumer = session.createConsumer(dest);
+
+                // Ожидаем сообщение (timeout 5 сек)
+                Message msg = consumer.receive(5000);
+                if (msg instanceof TextMessage) {
+                    String body = ((TextMessage) msg).getText();
+                    System.out.println(\"Получено: \" + body);
+                } else {
+                    System.out.println(\"Сообщение не найдено или не текстовое\");
+                }
+            }
+        }
+    }
+}
+```
+
+> **Стандартные режимы JMS (настраивает клиент)**
+> - AUTO_ACKNOWLEDGE (Автоматический)Брокер удаляет сообщение сразу, как только клиент принял его в метод receive() или обработал в onMessage(). Самый простой режим, но если клиент упадет во время обработки кода, сообщение пропадет.
+> - CLIENT_ACKNOWLEDGE (Вручную клиентом)Клиент сам вызывает message.acknowledge(). Брокер удаляет это сообщение и все предыдущие, полученные в этой сессии. Защищает от потери данных при сбоях в коде.
+> - DUPS_OK_ACKNOWLEDGE (С риском дубликатов)Автоматическое подтверждение, но группами (пакетами) ради экономии сети. Быстрее, чем AUTO, но при аварии клиента брокер может прислать некоторые сообщения повторно.
+> - Транзакции (Session.SESSION_TRANSACTED)Включается через createSession(true, 0). Сообщения подтверждаются пачкой только при вызове session.commit(). При ошибке делается session.rollback(), и вся пачка возвращается в очередь.
+---
+
+### Кратко о ключевых моментах
+
+| Шаг | Что делаем | Ключевое слово |
+|-----|------------|----------------|
+| 1   | Создаём `ConnectionFactory` | `ActiveMQConnectionFactory` |
+| 2   | Создаём `Connection` | `createConnection()` |
+| 3   | Создаём `Session` | `createSession()` |
+| 4   | Получаем/создаём `Destination` (queue/topic) | `createQueue()` / `createTopic()` |
+| 5   | Отправка: `MessageProducer` | `createProducer()` |
+| 6   | Приём: `MessageConsumer` | `createConsumer()` |
+| 7   | Отправляем/получаем сообщение | `send()` / `receive()` |
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Kafka</summary>
+    <p style='font-size: 14px'>
+
+## Что такое Kafka
+
+Kafka – это распределённый брокер сообщений, где **производители (producers)** публикуют сообщения в *топики*, а **потребители (consumers)** читают их.  
+Топик разбит на *партиции* – это упорядоченные потоки, которые позволяют распределять нагрузку и масштабировать чтение.
+
+---
+
+## 1. Отправка (производитель)
+
+```java
+import org.apache.kafka.clients.producer.*;
+
+import java.util.Properties;
+
+public class SimpleProducer {
+    public static void main(String[] args) {
+        // 1. Настройки
+        Properties props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, \"localhost:9092\");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                  \"org.apache.kafka.common.serialization.StringSerializer\");
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                  \"org.apache.kafka.common.serialization.StringSerializer\");
+
+        // 2. Создаём Producer
+        Producer<String, String> producer = new KafkaProducer<>(props);
+
+        // 3. Отправляем сообщение
+        ProducerRecord<String, String> record =
+                new ProducerRecord<>(\"my-topic\", \"key1\", \"Hello Kafka!\");
+
+        // синхронная отправка (можно использовать send() + callback)
+        try {
+            RecordMetadata metadata = producer.send(record).get();
+            System.out.printf(\"Отправлено в partition=%d, offset=%d%n\",
+                              metadata.partition(), metadata.offset());
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            producer.close();
+        }
+    }
+}
+```
+
+* `bootstrap.servers` – адреса узлов кластера.
+* `key/value serializer` – как сериализовать данные (String, JSON, Avro и т.д.).
+* `send()` возвращает `Future<RecordMetadata>`, откуда можно узнать, куда попало сообщение.
+
+---
+
+## 2. Чтение (потребитель)
+
+```java
+import org.apache.kafka.clients.consumer.*;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Properties;
+
+public class SimpleConsumer {
+    public static void main(String[] args) {
+        // 1. Настройки
+        Properties props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, \"localhost:9092\");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, \"my-group\");
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+                  \"org.apache.kafka.common.serialization.StringDeserializer\");
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+                  \"org.apache.kafka.common.serialization.StringDeserializer\");
+        // Автоматически подтверждать чтение
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, \"earliest\");
+
+        // 2. Создаём Consumer
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
+
+        // 3. Подписываемся на топик
+        consumer.subscribe(Collections.singletonList(\"my-topic\"));
+
+        // 4. Бесконечный цикл чтения
+        try {
+            while (true) {
+                ConsumerRecords<String, String> records =
+                        consumer.poll(Duration.ofMillis(500));
+                for (ConsumerRecord<String, String> record : records) {
+                    System.out.printf(\"Получено: key=%s, value=%s, partition=%d, offset=%d%n\",
+                                      record.key(), record.value(),
+                                      record.partition(), record.offset());
+                }
+            }
+        } finally {
+            consumer.close();
+        }
+    }
+}
+```
+>AUTO_OFFSET_RESET_CONFIG:
+> - earliest: Начать читать топик с самого первого, самого старого доступного сообщения (с нуля).
+> - latest (по умолчанию): Игнорировать старые сообщения и читать только те, которые начнут поступать в топик после включения вашего клиента.
+> - none: Если старого офсета нет, не запускаться вовсе и выбросить ошибку.
+
+* `group.id` – идентификатор группы потребителей; все участники группы делят чтение партиций.
+* `auto.offset.reset` – куда начинать читать, если у группы нет сохранённого offset (`earliest`/`latest`).
+* `poll()` возвращает пакет записей; `Duration` задаёт таймаут ожидания.
+
+---
+
+## 3. Краткие советы
+
+| Что | Как сделать |
+|-----|--------------|
+| **Сериализация** | Используйте готовые сериализаторы (`StringSerializer`, `ByteArraySerializer`) или пишите свои (например, Jackson для JSON). |
+| **Параллелизм** | Паратиции позволяют одновременно читать/писать из разных потоков. |
+| **Транзакции** | Для атомарного набора записей используйте `producer.initTransactions()` / `send()` / `commitTransaction()`. |
+| **Мониторинг** | Kafka предоставляет метрики через JMX. |
+| **Безопасность** | Включите SSL/TLS и SASL по необходимости. |
+
+---
+
+## Итог
+
+1. **Producer** → `ProducerRecord` → `producer.send()`
+2. **Consumer** → `consumer.subscribe()` → `consumer.poll()`
+
+С этими примерами вы уже можете отправлять и читать простые текстовые сообщения в Kafka. Далее можно подключать более сложные типы сериализации, управлять offset‑ами вручную, использовать транзакции и т.д. 🚀
+    </p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Java SQL</summary>
+    <p style='font-size: 14px'>
+
+## Как работать с БД в Java (JDBC)
+
+| Что | Что это | Почему важно |
+|-----|---------|--------------|
+| **JDBC** | API, встроенный в JDK, для работы с любой реляционной БД | Позволяет писать чистый Java‑код без сторонних библиотек |
+| **Driver** | Специфичный для каждой БД (MySQL, PostgreSQL, Oracle и т.д.) | Переводит JDBC‑запросы в протокол БД |
+| **Connection** | Открывает соединение с БД | Необходимо для всех операций |
+| **Statement / PreparedStatement** | Выполняет SQL‑запросы | `PreparedStatement` защищает от SQL‑инъекций и кэширует план |
+| **ResultSet** | Итератор по строкам результата | Позволяет читать данные |
+| **Transactions** | `commit` / `rollback` | Гарантирует атомарность операций |
+| **Connection Pool** | Хранилище открытых соединений | Уменьшает накладные расходы на открытие/закрытие |
+
+---
+
+### 1. Подключение к БД
+
+```java
+import java.sql.*;
+
+public class JdbcDemo {
+    // URL формата: jdbc:driver://host:port/dbname
+    private static final String URL = \"jdbc:postgresql://localhost:5432/testdb\";
+    private static final String USER = \"postgres\";
+    private static final String PASS = \"secret\";
+
+    public static void main(String[] args) {
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASS)) {
+            System.out.println(\"Connected!\");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+> **Tip** – В `pom.xml` добавьте зависимость драйвера:
+> ```xml
+> <dependency>
+>     <groupId>org.postgresql</groupId>
+>     <artifactId>postgresql</artifactId>
+>     <version>42.7.4</version>
+> </dependency>
+> ```
+
+---
+
+### 2. Выполнение запроса
+
+```java
+String sql = \"SELECT id, name, email FROM users WHERE status = ?\";
+try (Connection conn = DriverManager.getConnection(URL, USER, PASS);
+     PreparedStatement ps = conn.prepareStatement(sql)) {
+
+    ps.setString(1, \"ACTIVE\");           // параметр
+    try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+            int id = rs.getInt(\"id\");
+            String name = rs.getString(\"name\");
+            System.out.printf(\"%d: %s%n\", id, name);
+        }
+    }
+}
+```
+
+---
+
+### 3. Вставка/обновление
+
+```java
+String insert = \"INSERT INTO users (name, email, status) VALUES (?, ?, ?)\";
+try (Connection conn = DriverManager.getConnection(URL, USER, PASS);
+     PreparedStatement ps = conn.prepareStatement(insert, Statement.RETURN_GENERATED_KEYS)) {
+
+    ps.setString(1, \"Alice\");
+    ps.setString(2, \"alice@example.com\");
+    ps.setString(3, \"ACTIVE\");
+    int affected = ps.executeUpdate();
+
+    if (affected == 1) {
+        try (ResultSet keys = ps.getGeneratedKeys()) {
+            if (keys.next()) {
+                long newId = keys.getLong(1);
+                System.out.println(\"Inserted id: \" + newId);
+            }
+        }
+    }
+}
+```
+
+---
+
+### 4. Транзакции
+
+```java
+try (Connection conn = DriverManager.getConnection(URL, USER, PASS)) {
+    conn.setAutoCommit(false);          // включаем ручную транзакцию
+
+    // 1. Перенос баланса
+    try (PreparedStatement ps1 = conn.prepareStatement(
+            \"UPDATE accounts SET balance = balance - ? WHERE id = ?\")) {
+        ps1.setBigDecimal(1, new BigDecimal(\"100.00\"));
+        ps1.setInt(2, 1);
+        ps1.executeUpdate();
+    }
+
+    // 2. Получение денег
+    try (PreparedStatement ps2 = conn.prepareStatement(
+            \"UPDATE accounts SET balance = balance + ? WHERE id = ?\")) {
+        ps2.setBigDecimal(1, new BigDecimal(\"100.00\"));
+        ps2.setInt(2, 2);
+        ps2.executeUpdate();
+    }
+
+    conn.commit();                      // всё прошло – фиксируем
+} catch (SQLException e) {
+    // откат при ошибке
+    try { conn.rollback(); } catch (SQLException ex) { ex.printStackTrace(); }
+}
+```
+
+---
+
+### 5. Пул соединений (HikariCP)
+
+```java
+import com.zaxxer.hikari.*;
+
+HikariDataSource ds = new HikariDataSource();
+ds.setJdbcUrl(URL);
+ds.setUsername(USER);
+ds.setPassword(PASS);
+ds.setMaximumPoolSize(10);
+
+try (Connection conn = ds.getConnection()) {
+    // ваш код
+}
+```
 </p>
     </details>
 </details>
