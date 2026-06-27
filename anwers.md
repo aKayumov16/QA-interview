@@ -746,6 +746,166 @@ public void longApiTest() { ... }
  </p>
     </details>
     <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>DataProvider в TestNG</summary>
+    <p style='font-size: 14px'>
+
+## Что такое DataProvider в TestNG
+
+`@DataProvider` – это способ передавать в тест множество наборов данных.  
+Тест запускается столько раз, сколько строк вернёт `DataProvider`, и каждый раз получает
+одно из этих наборов.
+
+### Почему это удобно?
+* **Повторное использование кода** – один тест может проверять разные варианты входных данных.
+* **Чистый код** – данные вынесены из теста, а не прописаны вручную в `@Test`.
+* **Лёгкая интеграция** – можно подключать данные из CSV, Excel, базы и т.п.
+
+---
+
+## Как это работает
+
+```java
+public class LoginTest {
+
+    // 1. Определяем DataProvider
+    @DataProvider(name = \"loginData\")
+    public Object[][] loginData() {
+        return new Object[][]{
+                {\"user1\", \"pass1\"},
+                {\"user2\", \"wrong\"},
+                {\"admin\", \"admin123\"}
+        };
+    }
+
+    // 2. Тест, который использует DataProvider
+    @Test(dataProvider = \"loginData\")
+    public void testLogin(String username, String password) {
+        // логика теста
+        System.out.printf(\"Пробуем логин: %s / %s%n\", username, password);
+        // assert … (проверка результата)
+    }
+}
+```
+
+1. **`@DataProvider`**  
+   Метод должен возвращать `Object[][]`.  
+   Каждый вложенный массив – один набор параметров.
+
+2. **`@Test(dataProvider = \"имя\")`**  
+   Тест получает параметры из указанного `DataProvider`.
+
+---
+
+## Ключевые моменты
+
+| Что | Как делается |
+|-----|--------------|
+| **Имя DataProvider** | `@DataProvider(name = \"myProvider\")` |
+| **Приём параметров** | Можно передавать `Method m` для доступа к методу теста. |
+| **Сложные типы** | Можно возвращать объекты, списки, карты и т.д. |
+| **Группы** | `@DataProvider` может быть связан с группами через `@Test(groups = {\"fast\"})`. |
+| **Параллельный запуск** | При `parallel = true` в `@DataProvider` каждый набор данных выполняется в отдельном потоке. |
+
+---
+
+## Пример с параметром `Method`
+
+```java
+@DataProvider(name = \"methodBased\")
+public Object[][] methodBased(Method m) {
+    if (m.getName().equals(\"testA\")) {
+        return new Object[][]{{1, 2}, {3, 4}};
+    }
+    return new Object[][]{{5, 6}};
+}
+
+@Test(dataProvider = \"methodBased\")
+public void testA(int a, int b) { /* ... */ }
+
+@Test(dataProvider = \"methodBased\")
+public void testB(int a, int b) { /* ... */ }
+```
+
+---
+
+## Итог
+
+`@DataProvider` позволяет легко и гибко управлять входными данными тестов, делая их более читаемыми и поддерживаемыми.  
+С его помощью можно быстро проверить множество сценариев, не дублируя код.
+    </p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>SoftAssert в TestNG</summary>
+    <p style='font-size: 14px'>
+
+## Soft Assert в TestNG
+
+### Что это?
+
+`SoftAssert` позволяет собирать все ошибки в тесте, а не останавливаться на первой.  
+Тест продолжает выполняться, а в конце можно проверить все собранные утверждения.
+
+### Когда использовать?
+
+- Когда нужно проверить несколько полей/условий одновременно.
+- Когда дальнейшие шаги теста не зависят от предыдущих ошибок.
+
+### Как это работает
+
+```java
+import org.testng.asserts.SoftAssert;
+import org.testng.annotations.Test;
+
+public class SoftAssertExample {
+
+    @Test
+    public void testMultipleConditions() {
+        SoftAssert soft = new SoftAssert();
+
+        // 1. Проверяем заголовок
+        soft.assertEquals(getPageTitle(), \"Home\", \"Wrong title\");
+
+        // 2. Проверяем наличие элемента
+        soft.assertTrue(isElementVisible(\"loginBtn\"), \"Login button not visible\");
+
+        // 3. Проверяем текст кнопки
+        soft.assertEquals(getButtonText(\"loginBtn\"), \"Login\", \"Button text wrong\");
+
+        // В конце собираем результаты
+        soft.assertAll();   // Если хоть одно assertAll() не выполнено → тест FAIL
+    }
+
+    // Моки для примера
+    private String getPageTitle() { return \"Home\"; }
+    private boolean isElementVisible(String id) { return true; }
+    private String getButtonText(String id) { return \"Login\"; }
+}
+```
+
+### Ключевые моменты
+
+| Функция | Описание |
+|--------|----------|
+| `assertEquals`, `assertTrue`, `assertFalse` и др. | Сохраняют ошибку, но не бросают исключение сразу |
+| `assertAll()` | Проверяет все собранные ошибки. Если есть хотя бы одна, бросает `AssertionError` и тест считается неуспешным |
+
+### Преимущества
+
+- **Полный отчёт**: видите все ошибки сразу, а не одну за одной.
+- **Удобно для UI‑тестов**: можно проверить сразу несколько полей/элементов.
+
+### Недостатки
+
+- **Нужно помнить о `assertAll()`** – иначе ошибки останутся незамеченными.
+- **Тест может продолжить выполнение после критической ошибки**, что иногда не желаемо.
+
+---
+
+**Итого:**  
+`SoftAssert` – инструмент, который позволяет собирать все ошибки в тесте и проверять их одновременно. Это удобно, когда нужно проверить несколько условий в одном тестовом методе, но важно не забыть вызвать `assertAll()` в конце.
+    </p>
+    </details>
+    <details style='margin-left: 20px'>
     <summary style='font-size: 16px'>Maven</summary>
     <p style='font-size: 14px'>
 
@@ -1984,6 +2144,89 @@ public class SimpleConsumer {
     </p>
     </details>
     <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Настройка Kafka</summary>
+    <p style='font-size: 14px'>
+
+## Как поднять Kafka локально (Linux/Mac / Windows)
+
+> **Требования**  
+> • Java 8+ (JDK)  
+> • 1 ГБ свободного места (для логов)  
+> • 1‑2 ГБ оперативной памяти
+
+| Шаг | Что делаем | Команда / описание |
+|-----|------------|--------------------|
+| 1 | Установить Java | `sudo apt install openjdk-11-jdk`  (или `brew install openjdk@11`) |
+| 2 | Скачать Kafka | `wget https://downloads.apache.org/kafka/3.7.0/kafka_2.13-3.7.0.tgz` |
+| 3 | Распаковать | `tar -xzf kafka_2.13-3.7.0.tgz && cd kafka_2.13-3.7.0` |
+| 4 | Настроить `config/server.properties` | Переменные ниже |
+| 5 | Запустить Zookeeper | `bin/zookeeper-server-start.sh config/zookeeper.properties` |
+| 6 | Запустить Kafka‑broker | `bin/kafka-server-start.sh config/server.properties` |
+| 7 | Создать тему (topic) | `bin/kafka-topics.sh --create --topic test --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1` |
+| 8 | Проверить | `bin/kafka-console-producer.sh --topic test --bootstrap-server localhost:9092` → пишем сообщения, потом: `bin/kafka-console-consumer.sh --topic test --from-beginning --bootstrap-server localhost:9092` |
+
+---
+
+## Параметры `server.properties` (с нуля)
+
+> **Файл**: `config/server.properties`
+
+| Параметр | Значение | Что делает |
+|----------|----------|------------|
+| `broker.id` | `0` | Уникальный ID брокера в кластере |
+| `listeners` | `PLAINTEXT://:9092` | Порт, на котором слушает клиент |
+| `log.dirs` | `/tmp/kafka-logs` | Путь к директориям логов |
+| `num.network.threads` | `3` | Кол‑во потоков для сети |
+| `num.io.threads` | `8` | Кол‑во потоков для ввода/вывода |
+| `socket.send.buffer.bytes` | `102400` | Буфер отправки |
+| `socket.receive.buffer.bytes` | `102400` | Буфер приёма |
+| `socket.request.max.bytes` | `104857600` | Максимальный размер запроса (100 МБ) |
+| `log.retention.hours` | `168` | Сколько часов хранить логи (7 дней) |
+| `log.segment.bytes` | `1073741824` | Размер сегмента (1 ГБ) |
+| `zookeeper.connect` | `localhost:2181` | Адрес Zookeeper |
+| `auto.create.topics.enable` | `true` | Авто‑создание тем, если они не существуют |
+| `delete.topic.enable` | `true` | Разрешить удалять темы |
+| `group.initial.rebalance.delay.ms` | `0` | Задержка перед ребалансировкой групп |
+| `offsets.topic.replication.factor` | `1` | Репликация топика смещений (для 1‑брокера) |
+
+> **Совет**: Если запускаете только один брокер, `replication-factor` и `min.insync.replicas` можно оставить `1`. Для реального кластера нужны `replication-factor ≥ 3` и `min.insync.replicas ≥ 2`.
+
+---
+
+## Минимальный Java‑пример
+
+```java
+// Producer
+Properties props = new Properties();
+props.put(\"bootstrap.servers\", \"localhost:9092\");
+props.put(\"key.serializer\", \"org.apache.kafka.common.serialization.StringSerializer\");
+props.put(\"value.serializer\", \"org.apache.kafka.common.serialization.StringSerializer\");
+
+Producer<String, String> p = new KafkaProducer<>(props);
+p.send(new ProducerRecord<>(\"test\", \"key\", \"Hello Kafka!\"));
+p.close();
+
+// Consumer
+Properties propsC = new Properties();
+propsC.put(\"bootstrap.servers\", \"localhost:9092\");
+propsC.put(\"group.id\", \"demo\");
+propsC.put(\"key.deserializer\", \"org.apache.kafka.common.serialization.StringDeserializer\");
+propsC.put(\"value.deserializer\", \"org.apache.kafka.common.serialization.StringDeserializer\");
+propsC.put(\"auto.offset.reset\", \"earliest\");
+
+KafkaConsumer<String, String> c = new KafkaConsumer<>(propsC);
+c.subscribe(Collections.singletonList(\"test\"));
+while (true) {
+    for (ConsumerRecord<String, String> record : c.poll(Duration.ofMillis(100))) {
+        System.out.printf(\"offset=%d key=%s value=%s%n\",
+                          record.offset(), record.key(), record.value());
+    }
+}
+c.close();
+```
+</p>
+    </details>
+    <details style='margin-left: 20px'>
     <summary style='font-size: 16px'>Java SQL</summary>
     <p style='font-size: 14px'>
 
@@ -2124,6 +2367,147 @@ try (Connection conn = ds.getConnection()) {
     // ваш код
 }
 ```
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Jenkins pipelines</summary>
+    <p style='font-size: 14px'>
+
+## Что такое Jenkins Pipeline?
+
+Jenkins — это сервер CI/CD, а **Pipeline** — это способ описать всю сборку, тестирование и деплой как *программный скрипт*.  
+Пайплайн позволяет:Пайплайн записывается в файл `Jenkinsfile` и хранится в репозитории вместе с кодом.
+
+### Почему Pipeline полезен?
+
+| Преимущество | Что это значит |
+|--------------|----------------|
+| **Версионирование** | Пайплайн‑код хранится в Git, как и ваш проект. |
+| **Повторяемость** | Один и тот же файл запускается на любой машине. |
+| **Модульность** | Можно разделять пайплайн на отдельные этапы (checkout, build, test, deploy). |
+| **Отчёты** | Jenkins автоматически собирает отчёты о сборке и тестах. |
+
+---
+
+## Минимальный пример: Gradle + TestNG
+
+### 1. `build.gradle`
+
+```groovy
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // TestNG как фреймворк для юнит‑тестов
+    testImplementation 'org.testng:testng:7.6.1'
+}
+
+// Настраиваем задачу test, чтобы она использовала TestNG
+test {
+    useTestNG()
+    // Если нужно, можно указать конкретные тесты
+    // include '**/*MyTest*.class'
+}
+```
+
+> **Важно**: убедитесь, что в репозитории есть тесты, которые находятся в `src/test/java` и используют аннотации TestNG (`@Test`, `@BeforeMethod` и т.д.).
+
+### 2. `Jenkinsfile` (Declarative Pipeline)
+
+```groovy
+pipeline {
+    agent any                     // Запускаем на любой доступной ноде
+
+    tools {
+        // Jenkins должен иметь установленный Gradle
+        gradle 'Gradle_7.6'       // Имя версии из “Global Tool Configuration”
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Получаем код из репозитория
+                git branch: 'main', url: 'https://github.com/your-org/your-repo.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                // Собираем проект
+                sh './gradlew clean assemble'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                // Запускаем юнит‑тесты TestNG
+                sh './gradlew test'
+
+                // Публикуем результаты тестов в Jenkins
+                // Jenkins понимает формат JUnit XML, а TestNG генерирует его
+                junit 'build/test-results/test/TEST-*.xml'
+            }
+        }
+
+        stage('Archive Artifacts') {
+            steps {
+                // Архивируем артефакты сборки (jar, war и т.д.)
+                archiveArtifacts artifacts: 'build/libs/*.jar', fingerprint: true
+            }
+        }
+    }
+
+    post {
+        // Что делать после каждой сборки
+        always {
+            // Убираем временные файлы, если нужно
+            cleanWs()
+        }
+        success {
+            echo 'Build succeeded!'
+        }
+        failure {
+            echo 'Build failed!'
+        }
+    }
+}
+```
+
+### 3. Как это работает
+
+| Стадия | Что делает | Что видите в Jenkins |
+|--------|------------|----------------------|
+| `Checkout` | Клонирует репозиторий | Вкладка **Pipeline** показывает `git`-команды |
+| `Build` | `gradlew assemble` | В консоли виден вывод Gradle |
+| `Test` | `gradlew test` + `junit` | На вкладке **Tests** появляется таблица с количеством пройденных/непройденных тестов |
+| `Archive Artifacts` | Сохраняет jar‑файл | Вкладка **Artifacts** позволяет скачать jar |
+
+---
+
+## Быстрый старт
+
+1. **Установите Jenkins** (или воспользуйтесь Jenkins‑X, CloudBees, GitHub Actions и т.д.).
+2. В **Global Tool Configuration** добавьте Gradle (выберите нужную версию).
+3. В **Manage Jenkins → Manage Plugins** установите:
+    - *Gradle Plugin* (для `tools { gradle '...' }`)
+    - *JUnit Plugin* (для `junit` шага)
+4. Создайте новый **Pipeline** job и укажите путь к `Jenkinsfile` (обычно `Jenkinsfile` в корне репозитория).
+5. Запустите job – Jenkins сам выполнит все стадии.
+
+---
+
+## Плюсы и минусы
+
+| Плюсы | Минусы |
+|-------|--------|
+| Автоматизация всего цикла разработки | Нужно поддерживать Jenkins и плагины |
+| Возможность интеграции с другими инструментами (SonarQube, Nexus, Slack) | Пайплайн может стать громоздким при больших проектах |
+| Быстрый отклик о статусе сборки | Нужен опыт на Groovy/Declarative Pipeline |
 </p>
     </details>
 </details>
