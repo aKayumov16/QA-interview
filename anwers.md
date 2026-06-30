@@ -2497,6 +2497,484 @@ t2.start();
 `Runnable` описывает задачу, а `Thread` – сам поток, в котором эта задача выполняется. В большинстве случаев лучше использовать `Runnable` и запускать его через `Thread` или через `ExecutorService`.
     </p>
     </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Stream API</summary>
+    <p style='font-size: 14px'>
+
+## Что такое Stream API
+
+**Stream API** – это набор классов и методов, введённый в Java 8, который позволяет работать с коллекциями (и другими источниками данных) «потоковым» способом.  
+Вместо привычного цикла `for` вы описываете **операции над потоками** (filter, map, reduce и т.д.) и делаете всё в декларативном стиле.
+
+```java
+List<Integer> numbers = List.of(1, 2, 3, 4, 5);
+
+// обычный цикл
+int sum = 0;
+for (int n : numbers) {
+    if (n % 2 == 0) sum += n;
+}
+System.out.println(sum); // 6
+```
+
+```java
+// с Stream API
+int sum = numbers.stream()
+                 .filter(n -> n % 2 == 0)   // intermediate
+                 .mapToInt(Integer::intValue) // intermediate
+                 .sum();                   // terminal
+System.out.println(sum); // 6
+```
+
+---
+
+## Ключевые понятия
+
+| Тип операции | Что делает | Пример |
+|--------------|------------|--------|
+| **Source**   | Создаёт поток из коллекции, массива, генератора и т.д. | `list.stream()` |
+| **Intermediate** | Возвращает новый поток, но не завершает расчёт | `filter`, `map`, `sorted` |
+| **Terminal** | Завершает цепочку, возвращает результат | `collect`, `forEach`, `reduce`, `sum` |
+| **Lazy evaluation** | Операции выполняются только при терминальной операции | `stream().filter(...).map(...); // ничего не делает до forEach` |
+| **Parallelism** | Запуск потоков в несколько потоков | `parallelStream()` |
+
+---
+
+## Типичные операции
+
+| Операция | Описание | Пример |
+|----------|----------|--------|
+| `filter(Predicate)` | Оставляет только элементы, удовлетворяющие условию | `stream.filter(n -> n > 10)` |
+| `map(Function)` | Преобразует каждый элемент | `stream.map(n -> n * 2)` |
+| `flatMap(Function)` | Разворачивает вложенные потоки | `stream.flatMap(list -> list.stream())` |
+| `distinct()` | Убирает дубликаты | `stream.distinct()` |
+| `sorted(Comparator)` | Сортирует | `stream.sorted()` |
+| `limit(long)` | Берёт только первые N | `stream.limit(5)` |
+| `skip(long)` | Пропускает первые N | `stream.skip(3)` |
+| `forEach(Consumer)` | Выполняет действие для каждого элемента | `stream.forEach(System.out::println)` |
+| `collect(Collector)` | Собирает в коллекцию/строку/число | `stream.collect(Collectors.toList())` |
+| `reduce(BinaryOperator)` | Агрегирует в один результат | `stream.reduce(0, Integer::sum)` |
+| `anyMatch`, `allMatch`, `noneMatch` | Проверка условий | `stream.anyMatch(n -> n > 100)` |
+
+---
+
+## Полезные `Collectors`
+
+| Коллектор | Что делает | Пример |
+|-----------|------------|--------|
+| `Collectors.toList()` | Собирает в `List` | `stream.collect(Collectors.toList())` |
+| `Collectors.toSet()` | В `Set` | `stream.collect(Collectors.toSet())` |
+| `Collectors.joining()` | Склеивает строки | `stream.map(String::toUpperCase).collect(Collectors.joining(\", \"))` |
+| `Collectors.groupingBy(Function)` | Группирует по ключу | `stream.collect(Collectors.groupingBy(Person::getAge))` |
+| `Collectors.partitioningBy(Predicate)` | Делит на две группы (true/false) | `stream.collect(Collectors.partitioningBy(n -> n % 2 == 0))` |
+| `Collectors.summingInt(Function)` | Суммирует int‑значения | `stream.collect(Collectors.summingInt(Person::getSalary))` |
+| `Collectors.averagingDouble(Function)` | Среднее | `stream.collect(Collectors.averagingDouble(Person::getScore))` |
+
+---
+
+## Примеры из реальной жизни
+
+### 1. Фильтр + сортировка + вывод
+
+```java
+List<String> words = List.of(\"apple\", \"banana\", \"pear\", \"orange\", \"kiwi\");
+
+words.stream()
+     .filter(s -> s.length() > 5)          // только слова длиной > 5
+     .sorted()                             // сортировка по алфавиту
+     .forEach(System.out::println);        // вывод
+```
+
+### 2. Группировка
+
+```java
+class Person {
+    String name;
+    int age;
+    // конструктор, геттеры
+}
+
+List<Person> people = ...;
+
+Map<Integer, List<Person>> byAge = people.stream()
+    .collect(Collectors.groupingBy(Person::getAge));
+```
+
+### 3. Поиск максимального значения
+
+```java
+OptionalDouble max = numbers.stream()
+    .mapToInt(Integer::intValue)
+    .max();
+
+max.ifPresent(m -> System.out.println(\"Max: \" + m));
+```
+
+### 4. Параллельный поиск
+
+```java
+int countLarge = bigList.parallelStream()
+    .filter(n -> n > 1_000_000)
+    .count();
+```
+
+---
+
+## Почему стоит использовать Stream API
+
+| Преимущество | Как это выглядит |
+|--------------|------------------|
+| **Читаемость** | Одно‑строчная цепочка вместо громоздкого цикла |
+| **Композиция** | Операции легко комбинировать |
+| **Параллелизм** | `parallelStream()` – почти без изменений кода |
+| **Lazy evaluation** | Не создаются лишние списки, пока не понадобится результат |
+| **Безопасность** | Нет явных итераторов → меньше ошибок, например, ConcurrentModificationException |
+
+---
+
+## Быстрый чек‑лист для интервью
+
+1. **Что такое Stream?**  
+   Поток элементов, который можно обрабатывать последовательно или параллельно.
+
+2. **Какие типы операций есть?**  
+   Source → Intermediate (lazy) → Terminal.
+
+3. **В чем разница `stream()` и `parallelStream()`?**  
+   `parallelStream()` использует Fork/Join pool, а `stream()` работает последовательно.
+
+4. **Какие основные методы?**  
+   `filter`, `map`, `flatMap`, `sorted`, `distinct`, `limit`, `skip`, `forEach`, `collect`, `reduce`, `anyMatch` и т.д.
+
+5. **Как собрать результат?**  
+   Через `collect`, `toList()`, `joining()`, `groupingBy()`, `summingInt()` и др.
+
+6. **Что такое lazy evaluation?**  
+   Операции не выполняются до терминальной операции, экономит ресурсы.
+
+7. **Как обрабатывать исключения в лямбда‑выражениях?**  
+   Обычно оборачиваем в RuntimeException или используем `try`‑`catch` внутри лямбды.
+
+---
+
+### Итог
+
+Stream API – это мощный инструмент, который делает код компактнее, более декларативным и часто быстрее благодаря параллелизму. Умение быстро собрать цепочку операций и знать, какой коллектор использовать, часто оценивается на интервью для роли Java‑инженера по автоматизации тестирования.
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Optional</summary>
+    <p style='font-size: 14px'>
+
+## Что такое `Optional` в Java?
+
+`Optional<T>` – это контейнер, который может содержать **один** объект типа `T` или **ничего** (`null`).  
+Он появился в Java 8 как способ явно указать, что значение может отсутствовать, и заставить программиста обрабатывать этот случай, а не случайно получить `NullPointerException`.
+
+> **Кратко:**  
+> *`Optional` → \"может быть, а может не быть\".*
+
+## Когда и зачем использовать
+
+| Ситуация | Что делает `Optional` | Почему полезно |
+|----------|-----------------------|----------------|
+| Метод может вернуть результат или ничего | `Optional<T>` | Явно сигнализирует об отсутствии результата |
+| Нужно проверить наличие значения | `isPresent()`, `ifPresent()` | Избегаем `if (value != null)` |
+| Нужно вернуть дефолтное значение | `orElse()`, `orElseGet()` | Удобно заменить `?:` |
+| Нужно бросить исключение, если значение отсутствует | `orElseThrow()` | Чёткое управление ошибками |
+| Нужно преобразовать значение | `map()`, `flatMap()` | Позволяет цеплять операции без `null`‑проверок |
+| Нужно отфильтровать значение | `filter()` | Упрощает логику фильтрации |
+
+> **Важно:**  
+> *Не используйте `Optional` в качестве аргумента метода (или поля класса). Это не его назначение.*
+
+## Как создавать `Optional`
+
+```java
+Optional<String> present = Optional.of(\"Hello\");
+// throws NullPointerException if argument is null
+
+Optional<String> empty   = Optional.empty();
+
+Optional<String> nullable = Optional.ofNullable(null); // safe
+```
+
+## Основные методы
+
+| Метод | Что делает | Пример |
+|-------|------------|--------|
+| `isPresent()` | Проверяет наличие значения | `if (opt.isPresent()) { … }` |
+| `ifPresent(Consumer)` | Выполняет действие, если значение есть | `opt.ifPresent(v -> System.out.println(v));` |
+| `orElse(T)` | Возвращает значение или дефолтное | `String s = opt.orElse(\"default\");` |
+| `orElseGet(Supplier)` | Как `orElse`, но лениво вычисляется | `String s = opt.orElseGet(() -> \"lazy\");` |
+| `orElseThrow(Supplier)` | Бросает исключение, если пусто | `String s = opt.orElseThrow(() -> new NoSuchElementException());` |
+| `map(Function)` | Преобразует значение, если есть | `Optional<Integer> len = opt.map(String::length);` |
+| `flatMap(Function)` | Как `map`, но функция возвращает `Optional` | `Optional<Integer> len = opt.flatMap(s -> Optional.of(s.length()));` |
+| `filter(Predicate)` | Оставляет значение только если условие истинно | `Optional<String> filtered = opt.filter(s -> s.startsWith(\"A\"));` |
+
+## Примеры использования
+
+### 1. Вариант без `Optional` (может вызывать `NullPointerException`)
+
+```java
+String getName(User user) {
+    return user.getProfile().getName(); // если user или profile null → NPE
+}
+```
+
+### 2. С `Optional`
+
+```java
+Optional<String> getName(User user) {
+    return Optional.ofNullable(user)
+                   .map(User::getProfile)
+                   .map(Profile::getName);
+}
+```
+
+```java
+Optional<String> nameOpt = getName(user);
+nameOpt.ifPresent(name -> System.out.println(\"User name: \" + name));
+```
+
+### 3. В тестах (AssertJ + Optional)
+
+```java
+Optional<User> optUser = userService.findById(42L);
+assertThat(optUser).isPresent()
+                   .hasValueSatisfying(u -> assertThat(u.getAge()).isGreaterThan(18));
+```
+
+### 4. В репозитории (Spring Data пример)
+
+```java
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
+}
+```
+
+```java
+Optional<User> userOpt = userRepository.findByEmail(\"test@example.com\");
+User user = userOpt.orElseThrow(() -> new UserNotFoundException(email));
+```
+
+### 5. В потоках (Streams)
+
+```java
+List<String> names = users.stream()
+                          .map(User::getName)
+                          .filter(Objects::nonNull)
+                          .collect(Collectors.toList());
+```
+
+```java
+// с Optional внутри потока
+List<Integer> nameLengths = users.stream()
+    .map(User::getName)
+    .map(Optional::ofNullable)
+    .flatMap(opt -> opt.map(Stream::of).orElseGet(Stream::empty))
+    .map(String::length)
+    .collect(Collectors.toList());
+```
+
+## Краткое резюме
+
+- **`Optional<T>`** – контейнер для возможного отсутствия значения.
+- Создавайте его через `of`, `ofNullable`, `empty`.
+- Используйте методы `isPresent`, `ifPresent`, `orElse`, `orElseThrow`, `map`, `flatMap`, `filter`.
+- Не ставьте `Optional` в аргументы/поле класса.
+- В тестах и сервисах он помогает писать безопасный, читаемый код без `null`.
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Lambda</summary>
+    <p style='font-size: 14px'>
+
+## Что такое Lambda в Java
+
+Lambda‑выражения (анонимные функции) появились в Java 8.  
+Они позволяют писать компактный код, который можно передавать как значение, например, в методы коллекций, потоки и т.д.
+
+```java
+// синтаксис
+(parameters) -> expression
+```
+
+или
+
+```java
+(parameters) -> { statements; }
+```
+
+## Функциональные интерфейсы
+
+Lambda‑выражение может быть присвоено только **функциональному интерфейсу** – интерфейсу с одним абстрактным методом.
+
+```java
+@FunctionalInterface
+interface Converter<F, T> {
+    T convert(F from);
+}
+```
+
+### Встроенные функциональные интерфейсы
+
+| Интерфейс | Тип | Пример |
+|-----------|-----|--------|
+| `Runnable` | `() -> void` | `() -> System.out.println(\"run\")` |
+| `Consumer<T>` | `T -> void` | `x -> System.out.println(x)` |
+| `Supplier<T>` | `() -> T` | `() -> 42` |
+| `Predicate<T>` | `T -> boolean` | `s -> s.length() > 3` |
+| `Function<T,R>` | `T -> R` | `s -> s.toUpperCase()` |
+| `BiFunction<T,U,R>` | `T,U -> R` | ` (a,b) -> a + b` |
+
+## Примеры
+
+### 1. Итерация по списку
+
+```java
+List<String> names = List.of(\"Anna\", \"Bob\", \"Cindy\");
+
+names.forEach(name -> System.out.println(name));
+```
+
+### 2. Stream‑pipeline
+
+```java
+List<Integer> nums = List.of(1, 2, 3, 4, 5, 6);
+
+int sum = nums.stream()
+              .filter(n -> n % 2 == 0)   // только чётные
+              .map(n -> n * n)           // возвести в квадрат
+              .reduce(0, Integer::sum);  // сложить
+
+System.out.println(sum); // 56
+```
+
+### 3. Метод‑референс
+
+```java
+List<String> words = List.of(\"java\", \"stream\", \"lambda\");
+
+words.sort(String::compareToIgnoreCase); // вместо (a,b) -> a.compareToIgnoreCase(b)
+```
+
+### 4. Пользовательский функциональный интерфейс
+
+```java
+@FunctionalInterface
+interface MathOperation {
+    int operate(int a, int b);
+}
+
+MathOperation add = (x, y) -> x + y;
+MathOperation mul = (x, y) -> x * y;
+
+System.out.println(add.operate(3, 4)); // 7
+System.out.println(mul.operate(3, 4)); // 12
+```
+
+### 5. Чистая функция (без побочных эффектов)
+
+```java
+Function<Integer, Integer> square = x -> x * x; // всегда возвращает то же самое при одинаковом входе
+```
+
+## Ключевые принципы функционального программирования в Java
+
+| Принцип | Что это значит |
+|---------|----------------|
+| **Иммутабельность** | Изменять нельзя – создаём новые объекты |
+| **Чистые функции** | Результат зависит только от входных параметров, нет побочных эффектов |
+| **Высокий‑уровневые функции** | Функции могут принимать и возвращать другие функции (например, `Predicate<T> filter(Predicate<T> p)` ) |
+| **Ленивые вычисления** | Потоки (Streams) вычисляют элементы только по мере необходимости |
+
+## Итоги
+
+- Lambda‑выражения делают код более лаконичным и читаемым.
+- Функциональные интерфейсы позволяют использовать лямбды в качестве аргументов и возвращаемых значений.
+- Стандартные API (коллекции, Streams, Optional) уже используют функциональные интерфейсы.
+- В Java функциональное программирование не заменяет ООП, но дополняет его, особенно при работе с потоками данных.
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Функциональные интерфейсы</summary>
+    <p style='font-size: 14px'>
+
+## Встроенные функциональные интерфейсы в Java
+
+Функциональные интерфейсы – это интерфейсы, которые объявляют ровно один абстрактный метод. Они нужны для **lambdas** и **method references**.  
+Java 8+ поставляет несколько готовых интерфейсов в пакетах `java.util.function`, `java.util.concurrent`, `java.lang` и др.
+
+| Пакет | Интерфейс | Кол-во абстрактных методов | Краткое назначение | Пример использования |
+|-------|-----------|---------------------------|--------------------|----------------------|
+| `java.util.function` | **Predicate<T>** | 1 (`boolean test(T t)`) | Фильтрация, проверка условий | `list.stream().filter(Predicate.isEqual(\"foo\"))` |
+| | **Function<T,R>** | 1 (`R apply(T t)`) | Преобразование одного значения в другое | `String upper = Function.identity().apply(\"abc\")` |
+| | **Consumer<T>** | 1 (`void accept(T t)`) | Выполнение побочных эффектов | `list.forEach(System.out::println)` |
+| | **Supplier<T>** | 1 (`T get()`) | Поставщик значений | `Supplier<Integer> rnd = () -> new Random().nextInt();` |
+| | **UnaryOperator<T>** | 1 (`T apply(T t)`) | Операция над одним типом | `UnaryOperator<Integer> inc = x -> x + 1;` |
+| | **BinaryOperator<T>** | 1 (`T apply(T t1, T t2)`) | Операция над двумя значениями одного типа | `BinaryOperator<Integer> sum = Integer::sum;` |
+| | **BiPredicate<T,U>** | 1 (`boolean test(T t, U u)`) | Проверка условия на два аргумента | `BiPredicate<String,Integer> startsWith = (s,n)->s.charAt(0)==n;` |
+| | **BiFunction<T,U,R>** | 1 (`R apply(T t, U u)`) | Функция, принимающая два аргумента | `BiFunction<Integer,Integer,Integer> mul = (a,b)->a*b;` |
+| | **BiConsumer<T,U>** | 1 (`void accept(T t, U u)`) | Побочный эффект с двумя аргументами | `BiConsumer<String,Integer> print = (s,n)->System.out.println(s+n);` |
+
+### Короткие примеры
+
+```java
+// 1. Predicate
+List<String> names = List.of(\"Anna\", \"Bob\", \"Alex\");
+List<String> longNames = names.stream()
+        .filter(name -> name.length() > 3)   // Predicate<String>
+        .toList();                          // → [\"Anna\", \"Alex\"]
+
+// 2. Function
+Function<String, Integer> len = String::length;
+int lenOfHello = len.apply(\"Hello\");        // 5
+
+// 3. Consumer
+Consumer<Integer> print = System.out::println;
+print.accept(42);                           // prints 42
+
+// 4. Supplier
+Supplier<Double> rand = Math::random;
+double r = rand.get();                      // random double
+
+// 5. UnaryOperator
+UnaryOperator<Integer> square = x -> x * x;
+int sq = square.apply(5);                   // 25
+
+// 6. BinaryOperator
+BinaryOperator<Integer> max = Integer::max;
+int m = max.apply(7, 3);                    // 7
+
+// 7. BiPredicate
+BiPredicate<String, Integer> startsWithNum =
+        (s, n) -> s.charAt(0) == (char)(n + '0');
+boolean ok = startsWithNum.test(\"3abc\", 3);  // true
+
+// 8. BiFunction
+BiFunction<Integer, Integer, Integer> add =
+        (a, b) -> a + b;
+int sum = add.apply(4, 5);                  // 9
+
+// 9. BiConsumer
+BiConsumer<String, Integer> greet =
+        (name, age) -> System.out.printf(\"%s, %d years old%n\", name, age);
+greet.accept(\"Eve\", 30);                    // Eve, 30 years old
+```
+
+### Где они применяются?
+
+- **Stream API**: `filter`, `map`, `forEach`, `reduce` и т.д.
+- **Concurrent API**: `Callable`, `Runnable` – можно преобразовать в `Supplier`, `Consumer`.
+- **Тестирование**: `Supplier` для создания объектов, `Consumer` для проверки состояний.
+- **Обобщенные библиотеки**: `Function`, `BiFunction` – для построения цепочек операций.
+
+> **Совет**: если нужно только проверить условие – используйте `Predicate`; если просто преобразовать – `Function`; если хотите вернуть результат без аргументов – `Supplier`; если нужно что‑то сделать с аргументом без возврата – `Consumer`.
+
+Таким образом, встроенные функциональные интерфейсы покрывают большинство типовых сценариев работы с лямбда‑выражениями в Java.
+</p>
+    </details>
 </details>
 <details>    
 <summary style='font-size: 20px'><b>Spring</b></summary>
