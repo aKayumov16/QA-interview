@@ -10867,6 +10867,1034 @@ EXPLAIN SELECT * FROM orders WHERE user_id = 5;
 </details>
 
 <details>    
+<summary style='font-size: 20px'><b>CI/CD</b></summary>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Что такое CI/CD</summary>
+    <p style='font-size: 14px'>
+
+## Что такое CI/CD?
+
+| Термин | Что это значит |
+|--------|----------------|
+| **CI** – *Continuous Integration* (непрерывная интеграция) | Каждый раз, когда разработчик вносит изменения в код, они автоматически собираются и тестируются. Это позволяет быстро находить ошибки, которые возникли из‑за новых правок. |
+| **CD** – *Continuous Delivery / Continuous Deployment* (непрерывная доставка/развертывание) | После успешного тестирования код автоматически готовится к публикации.  
+* **Continuous Delivery** – готов к публикации, но публикация делается вручную.
+* **Continuous Deployment** – публикация происходит автоматически, без ручного вмешательства. |
+
+Таким образом, CI/CD – это набор практик и инструментов, которые делают процесс «из кода → работающий продукт» максимально автоматизированным и быстрым.
+
+---
+
+## Как это работает на практике
+
+1. **Commit** – программист кладёт изменения в репозиторий (Git, GitHub, GitLab и т.д.).
+2. **Build** – система (GitHub Actions, GitLab CI, Jenkins, CircleCI и т.п.) берёт новый код, собирает проект (компилирует, собирает Docker‑образ и т.д.).
+3. **Test** – запускаются юнит‑тесты, интеграционные тесты, статический анализ кода.
+4. **Deploy** – если все проверки прошли, код автоматически развёртывается в тестовую среду, а иногда и в продакшн.
+5. **Monitor** – после развертывания система следит за метриками и логами.
+
+---
+
+## Плюсы CI/CD
+
+| Плюс | Почему это важно |
+|------|------------------|
+| **Быстрое обнаружение ошибок** | Ошибки фиксируются сразу после коммита, а не после недели разработки. |
+| **Качество кода** | Автоматические тесты заставляют писать покрывающий код и следовать лучшим практикам. |
+| **Сокращение времени релиза** | От «commit → релиз» может пройти пару минут вместо недель. |
+| **Повышенная надёжность** | Автоматизированные проверки уменьшают человеческий фактор. |
+| **Масштабируемость** | Системы CI/CD легко масштабируются под рост команды и объёма кода. |
+| **Улучшение сотрудничества** | Чёткая схема проверки и развертывания облегчает коммуникацию между разработчиками, тестировщиками и DevOps. |
+| **Легкая интеграция с облачными сервисами** | Большинство CI‑сервисов поддерживают облачные платформы и контейнеры. |
+
+---
+
+## Минусы CI/CD
+
+| Минус | Что может пойти не так |
+|-------|------------------------|
+| **Сложность настройки** | Настроить pipeline, покрыть все тесты и деплой – это трудозатратный процесс. |
+| **Требует дисциплины** | Если разработчики не следуют правилам (не пишут тесты, не комментируют код), CI/CD потеряет смысл. |
+| **Ресурсы** | Постоянный сбор и тестирование могут требовать значительных вычислительных ресурсов (серверы, облако). |
+| **Фальшивые позитивы** | Если тесты слишком «мягкие» (например, не покрывают реальную бизнес‑логику), ошибки могут проходить мимо. |
+| **Сложности в отладке** | При отказе pipeline иногда сложно быстро понять, в чём причина (неправильный тест, зависимость, инфраструктура). |
+| **Безопасность** | Автоматическое развертывание в продакшн повышает риск внедрения вредоносных изменений, если pipeline не защищён. |
+| **Сопротивление изменениям** | В старых проектах внедрение CI/CD может встретить сопротивление со стороны команды из‑за привычек. |
+
+---
+
+## Итог
+
+CI/CD – это мощный подход, который делает процесс разработки более прозрачным, быстрым и надёжным. Главное – правильно настроить пайплайн, написать достаточное количество тестов и поддерживать дисциплину в команде. Когда всё работает, вы получаете быстрое и безопасное обновление продукта, а команда может сосредоточиться на новых фичах, а не на ручном развертывании.
+    </p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Инструменты CI/CD</summary>
+    <p style='font-size: 14px'>
+
+## Инструменты CI
+
+| Инструмент | Что делает | Почему популярен |
+|------------|------------|------------------|
+| **Jenkins** | Самый гибкий, открытый CI‑сервер. Позволяет писать пайплайны на Groovy, подключать плагины для любых задач. | Большое сообщество, почти любой язык и фреймворк поддерживаются. |
+| **GitLab CI/CD** | Встроенный CI в GitLab. Пайплайны описываются в `.gitlab-ci.yml`. | Легко интегрируется с репозиторием, не требует отдельного сервера. |
+| **GitHub Actions** | CI/CD прямо в GitHub. Пайплайны в YAML‑файлах. | Быстрое развертывание, бесплатный для публичных репозиториев. |
+| **CircleCI** | Быстрый, масштабируемый CI, поддерживает Docker и Kubernetes. | Хорошо подходит для облачных проектов. |
+| **Travis CI** | Классический CI для открытого кода, легко подключается к GitHub. | Простота настройки, бесплатен для открытых репозиториев. |
+| **Bamboo** | Интегрируется с Atlassian Stack (Jira, Bitbucket). | Хорошо подходит для корпоративных сред. |
+| **TeamCity** | CI от JetBrains, поддержка .NET, Java, Android. | Интеграция с IDE, удобный UI. |
+| **Azure Pipelines** | CI/CD в Azure DevOps. Поддерживает любые языки и облачные провайдеры. | Интеграция с облачными сервисами Microsoft. |
+
+---
+
+## Инструменты CD (развертывание)
+
+| Инструмент | Что делает | Ключевые особенности |
+|------------|------------|----------------------|
+| **Docker** | Контейнеризация приложений. | Изолированные среды, одинаковый запуск в любой среде. |
+| **Kubernetes** | Оркестрация контейнеров. | Автоматическое масштабирование, самовосстановление. |
+| **Helm** | Менеджер пакетов для Kubernetes. | Упрощает установку и обновление приложений в кластере. |
+| **Argo CD** | Git‑first CD для Kubernetes. | Автоматически синхронизирует состояние кластера с Git‑репозиторием. |
+| **Spinnaker** | Многооблачный CD‑фреймворк. | Поддержка AWS, GCP, Azure, Kubernetes. |
+| **Octopus Deploy** | Платформа для развертывания и управления версиями. | Удобный UI, поддержка различных сред. |
+| **GitHub Actions** (дополнительно) | Можно использовать для деплоя в облако. | Быстрый и простой способ. |
+| **Azure Pipelines** (дополнительно) | Поддерживает публикацию в Azure App Service, AKS и др. | Интегрирован с Azure. |
+
+---
+
+## Плюс‑инструменты, которые часто входят в пайплайн
+
+| Категория | Инструмент | Зачем нужен |
+|-----------|------------|-------------|
+| **Репозиторий кода** | Git, GitHub, GitLab, Bitbucket | Хранение исходного кода и истории изменений. |
+| **Управление зависимостями** | Maven, Gradle, npm, pip | Автоматическое скачивание библиотек. |
+| **Сборка и упаковка** | Maven, Gradle, Docker | Создание артефактов (JAR, WAR, Docker‑image). |
+| **Тестирование** | JUnit, TestNG, Selenium, Cucumber | Проверка корректности кода. |
+| **Анализ качества** | SonarQube, Checkstyle, PMD | Проверка стиля, покрытие тестами, безопасность. |
+| **Хранилище артефактов** | Nexus, Artifactory, GitHub Packages | Хранение готовых сборок. |
+| **Мониторинг и логирование** | Prometheus, Grafana, ELK | Отслеживание состояния продакшн‑систем. |
+
+---
+
+## Как это обычно выглядит в реальном пайплайне
+
+1. **Commit → Push** – разработчик кладёт код в Git.
+2. **CI** – Jenkins / GitLab автоматически запускает сборку, тесты, анализ качества.
+3. **Build Artifact** – создаётся JAR/WAR/ Docker‑image, загружается в Nexus/Artifactory.
+4. **CD** – Argo CD или Spinnaker получает новый образ и разворачивает его в Kubernetes, либо Octopus Deploy отправляет на тестовый сервер.
+5. **Мониторинг** – Prometheus/ Grafana проверяют, что приложение работает правильно.
+
+---
+
+### Итог
+
+Для CI/CD чаще всего используют комбинацию **Git → CI‑сервер (Jenkins, GitLab CI, GitHub Actions) → сборка (Maven/Gradle/Docker) → артефакт‑репозиторий (Nexus/Artifactory) → CD‑инструмент (Argo CD, Spinnaker, Octopus Deploy) → Kubernetes/облачный провайдер**.
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Jenkins</summary>
+    <p style='font-size: 14px'>
+
+## Что такое Jenkins?
+
+| Что | Как это выглядит |
+|-----|------------------|
+| **Jenkins** – это *платформа для непрерывной интеграции* (CI) и непрерывного развертывания (CD). | <img src=\"https://www.jenkins.io/images/jenkins.png\" alt=\"logo\" width=\"200\"> |
+| Она автоматически собирает, тестирует и разворачивает ваш код каждый раз, когда кто‑то меняет репозиторий. |  |
+
+### Ключевые идеи
+
+| Идея | Что это значит |
+|------|----------------|
+| **Пайплайны** | Последовательность шагов, которые Jenkins выполняет: сборка, тесты, деплой. |
+| **Плагины** | Расширяют возможности Jenkins (Git, Maven, Docker, Slack, и т.д.). |
+| **Jobs (построения)** | Конфигурация конкретного пайплайна: где брать код, какие команды запускать, как уведомлять. |
+| **Triggers** | Как и когда запускать job: вручную, по расписанию, после коммита в Git, и т.д. |
+| **Artifacts** | Файлы, которые сохраняются после сборки (например, jar, zip). |
+
+---
+
+## Как установить Jenkins
+
+1. **Скачайте**:
+    - На Windows – `jenkins.msi`.
+    - На Linux – `jenkins.war` (можно запустить `java -jar jenkins.war`).
+2. **Запустите**: `java -jar jenkins.war` (или установите как сервис).
+3. **Перейдите** к `http://localhost:8080` в браузере.
+4. **Разблокируйте**: Введите пароль из файла `initialAdminPassword`.
+5. **Установите плагины**: Выберите «Recommended plugins» (или добавьте нужные вручную).
+6. **Создайте первого пользователя** и завершите настройку.
+
+---
+
+## Как создать Job (построение)
+
+### 1. Вариант «Freestyle project» (классический)
+
+| Шаг | Что делаем | Пример |
+|-----|------------|--------|
+| **Создать новый job** | В главном меню → *New Item* → введите имя → выберите *Freestyle project* → OK | `MyApp Build` |
+| **Source Code Management** | Выберите *Git*, укажите репозиторий и ветку | `https://github.com/your/repo.git` |
+| **Build Triggers** | Например, *GitHub hook trigger for GITScm polling* | (будет запускаться при push) |
+| **Build Environment** | Установите переменные, очистите workspace | `Delete workspace before build starts` |
+| **Build** | Добавьте шаг `Execute shell` или `Invoke Ant`, `Maven`, `Gradle` | `./mvnw clean package` |
+| **Post-build Actions** | Отправить артефакты, отправить email, Slack | `Archive the artifacts` → `**/target/*.jar` |
+| **Сохранить** | Нажмите *Save* |  |
+
+> **Совет**: Для Java‑проектов чаще всего используется Maven/Gradle. Добавьте соответствующий плагин, а затем в разделе *Build* выберите *Invoke Maven* (или *Invoke Gradle script*).
+
+### 2. Вариант «Pipeline» (код в Jenkinsfile)
+
+Pipeline позволяет хранить конфигурацию в репозитории (Git). Это более гибко и удобно для сложных процессов.
+
+1. **Создать новый job** → *Pipeline* → *OK*.
+2. В поле **Pipeline script** вставляем код:
+
+```groovy
+pipeline {
+    agent any
+
+    tools {
+        // Указываем JDK, Maven/Gradle
+        jdk 'jdk11'
+        maven 'M3'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/your/repo.git', branch: 'main'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh './mvnw clean package'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh './mvnw test'
+            }
+        }
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+            }
+        }
+    }
+
+    post {
+        always {
+            junit 'target/surefire-reports/*.xml'
+        }
+        failure {
+            mail to: 'devops@example.com',
+                 subject: \"Build failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}\",
+                 body: \"Check console output at ${env.BUILD_URL}\"
+        }
+    }
+}
+```
+
+3. **Сохранить** → **Build Now** (или настроить триггер).
+
+> **Плюсы Pipeline**
+> * Версионируем конфигурацию вместе с кодом.
+> * Легко читаем и поддерживаем.
+> * Можно писать сложные сценарии (parallel, input, environment variables).
+
+---
+
+## Как настроить триггеры
+
+| Триггер | Когда запускается | Как настроить |
+|---------|-------------------|---------------|
+| **Manual** | По кнопке «Build Now» | По умолчанию |
+| **Scheduled** | По расписанию (cron) | *Build Triggers* → *Build periodically* → `H/5 * * * *` |
+| **SCM polling** | При изменениях в репозитории | *Build Triggers* → *Poll SCM* → `H/15 * * * *` |
+| **Webhook** | При push в GitHub/GitLab | В настройках репозитория добавить webhook → Jenkins URL: `https://jenkins.example.com/github-webhook/` |
+| **Parameterized** | С пользовательскими параметрами | *This project is parameterized* → добавляем `String Parameter`, `Boolean Parameter` и т.д. |
+
+---
+
+## Как управлять артефактами
+
+1. **Archive** – сохраняет файлы после сборки:  
+   *В Freestyle* → *Post-build Actions* → *Archive the artifacts* → `target/*.jar`  
+   *В Pipeline* – команда `archiveArtifacts`.
+
+2. **Publish over SSH** – отправить артефакты на удалённый сервер.
+3. **Deploy** – развернуть в Tomcat, JBoss, Docker и т.д. (плагин `Deploy to container`).
+
+---
+
+## Полезные плагины для Java
+
+| Плагин | Что делает |
+|--------|------------|
+| **Git** | Поддержка Git. |
+| **Maven Integration** | Автоматический импорт POM, управление зависимостями. |
+| **Gradle** | Поддержка Gradle. |
+| **JUnit** | Показ результатов тестов. |
+| **Cobertura / JaCoCo** | Покрытие кода тестами. |
+| **Build Timeout** | Останавливает сборку, если она длится слишком долго. |
+| **Slack Notification** | Отправляет сообщения в Slack. |
+| **Pipeline: Groovy** | Необходим для Pipeline. |
+
+---
+
+## Быстрый чек‑лист для интервью
+
+1. **Что такое Jenkins?** – CI/CD сервер, автоматизирует сборку, тесты, деплой.
+2. **Как он устроен?** – Master/Agent, плагины, jobs, пайплайны.
+3. **Как создаётся job?** – Freestyle (GUI) или Pipeline (код).
+4. **Какие шаги сборки обычно нужны для Java?** – Checkout → Build (Maven/Gradle) → Test → Archive → Deploy.
+5. **Как настроить триггер?** – Manual, SCM polling, webhook, cron.
+6. **Что такое артефакты и как их сохранять?** – `archiveArtifacts`.
+7. **Какие плагины часто используют?** – Git, Maven, Gradle, JUnit, Slack.
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Jenkins Pipeline</summary>
+    <p style='font-size: 14px'>
+
+## Что такое **Jenkins Pipeline**?
+
+Jenkins – это система CI/CD, а **Pipeline** – это способ описания всего процесса сборки, тестирования и деплоя как кода.  
+Файл, в котором хранится описание, называется **`Jenkinsfile`** и обычно кладётся в корень репозитория.
+
+> **Плюсы Pipeline**
+> * Читаемость и поддерживаемость (код вместо графического интерфейса)
+> * Версионирование (изменения в `Jenkinsfile` хранятся в Git)
+> * Возможность использовать скрипты, библиотеки, параллельные шаги и т.д.
+
+---
+
+## Основные типы Pipeline
+
+| Тип | Кратко |
+|-----|--------|
+| **Declarative** | Самый простой, «принцип‑настроек». Структура: `pipeline { … }`. |
+| **Scripted** | Полноценный Groovy‑скрипт. Структура: `node { … }`. Позволяет писать любой код, но громоздче. |
+
+> **Совет**: для большинства проектов достаточно декларативного синтаксиса. Скрипт‑пайплайн используют, когда нужна особая гибкость.
+
+---
+
+## Структура декларативного `Jenkinsfile`
+
+```groovy
+pipeline {
+    agent any                     // где будет выполняться
+    options {                     // глобальные опции
+        timestamps()              // выводить таймстемпы
+        buildDiscarder(logRotator(numToKeepStr: '10')) // хранить только 10 сборок
+    }
+    environment {                  // переменные среды
+        JAVA_HOME = tool(name: 'jdk11', type: 'jdk')
+        MAVEN_HOME = tool(name: 'maven3', type: 'maven')
+    }
+    tools {                        // автоматически установить JDK/Maven
+        jdk 'jdk11'
+        maven 'maven3'
+    }
+    stages {                       // последовательность этапов
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'mvn -B clean package -DskipTests'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+                junit 'target/surefire-reports/*.xml'
+            }
+        }
+        stage('SonarQube') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh \"mvn sonar:sonar -Dsonar.projectKey=myproject\"
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh './deploy.sh'
+            }
+        }
+    }
+    post {                          // действия после завершения
+        always {
+            archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+        }
+        success {
+            echo 'Build succeeded!'
+        }
+        failure {
+            echo 'Build failed!'
+        }
+    }
+}
+```
+
+### Что здесь происходит?
+
+| Блок | Зачем |
+|------|-------|
+| `agent` | Выбирает, где запускать. `any` – любой агент, `label 'linux'` – только Linux‑агент. |
+| `options` | Настройки, влияющие на весь пайплайн (таймстемпы, хранение сборок, ограничение одновременных сборок и т.д.). |
+| `environment` | Переменные, доступные во всех шагах. |
+| `tools` | Указывает, какие JDK/Maven/Gradle нужно установить. |
+| `stages` | Основные этапы. Каждый `stage` может иметь `steps`. |
+| `post` | Что делать после сборки: артефакты, отчёты, уведомления и т.п. |
+
+---
+
+## Полезные шаги (steps)
+
+| Шаг | Пример | Что делает |
+|-----|--------|------------|
+| `checkout scm` | `checkout scm` | Клонирует репозиторий, указанный в настройках job. |
+| `sh` / `bat` | `sh 'mvn clean'` | Выполняет Unix‑команду. `bat` для Windows. |
+| `archiveArtifacts` | `archiveArtifacts artifacts: '**/target/*.jar'` | Сохраняет артефакты для скачивания. |
+| `junit` | `junit 'target/surefire-reports/*.xml'` | Загружает отчёты TestNG/JUnit. |
+| `publishHTML` | `publishHTML([allowMissing: false, keepAll: true, reportDir: 'report', reportFiles: 'index.html', reportName: 'HTML Report'])` | Публикует статический HTML‑отчёт. |
+| `withCredentials` | `withCredentials([usernamePassword(credentialsId: 'git-cred', usernameVariable: 'USR', passwordVariable: 'PWD')]) { sh 'git push' }` | Делает доступ к секретам безопасным. |
+| `input` | `input message: 'Deploy to prod?', ok: 'Deploy'` | Останавливает пайплайн до ручного подтверждения. |
+| `parallel` | `parallel([stage('Test 1') { steps { sh 'mvn -Dtests=1 test' } }, stage('Test 2') { steps { sh 'mvn -Dtests=2 test' } }])` | Запускает несколько ветвей одновременно. |
+| `retry` | `retry(3) { sh 'mvn test' }` | Повторяет шаг до 3 раз при ошибке. |
+| `timeout` | `timeout(time: 10, unit: 'MINUTES') { sh 'mvn verify' }` | Останавливает шаг, если он длится слишком долго. |
+| `build` | `build job: 'deploy', parameters: [string(name: 'VERSION', value: '1.0')]` | Запускает другой Jenkins‑job изнутри. |
+
+---
+
+## Пример «параллельного» этапа
+
+```groovy
+stage('Parallel Tests') {
+    parallel {
+        stage('Unit') {
+            steps {
+                sh 'mvn -DskipITs test'
+            }
+        }
+        stage('Integration') {
+            steps {
+                sh 'mvn -DskipTests verify'
+            }
+        }
+    }
+}
+```
+
+---
+
+## Параметризованный пайплайн
+
+```groovy
+pipeline {
+    agent any
+    parameters {
+        string(name: 'VERSION', defaultValue: '1.0', description: 'Версия приложения')
+        booleanParam(name: 'DEPLOY', defaultValue: false, description: 'Разворачивать ли в prod')
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh \"mvn clean package -Dversion=${params.VERSION}\"
+            }
+        }
+        stage('Deploy') {
+            when {
+                expression { return params.DEPLOY }
+            }
+            steps {
+                sh './deploy.sh ${params.VERSION}'
+            }
+        }
+    }
+}
+```
+
+---
+
+## Использование **Shared Libraries**
+
+Shared Library – общие фрагменты кода, которые можно переиспользовать в разных пайплайнах.
+
+```groovy
+@Library('my-shared-lib@master') _
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                myCustomBuild()   // функция из shared library
+            }
+        }
+    }
+}
+```
+
+> **Как подключить**
+> 1. Создаём репозиторий с библиотекой.
+> 2. В Jenkins → **Manage Jenkins → Configure System → Global Pipeline Libraries** добавляем ссылку на репозиторий.
+> 3. В каждом `Jenkinsfile` пишем `@Library('name') _`.
+
+---
+
+## Быстрый чек‑лист для новичка
+
+1. **Создайте `Jenkinsfile` в корне репозитория.**
+2. **Выберите тип пайплайна** – декларативный (`pipeline { … }`) или скрипт‑пайплайн (`node { … }`).
+3. **Определите `agent`** – где будет запускаться (любое, конкретный label, Docker‑контейнер).
+4. **Добавьте `stages`** – `Checkout`, `Build`, `Test`, `Deploy`.
+5. **Используйте `steps`** – `sh`, `checkout`, `archiveArtifacts`, `junit`.
+6. **Добавьте `post`** – артефакты, отчёты, уведомления.
+7. **Сохраните и закоммитьте** файл.
+8. **Настройте Jenkins job**: выберите репозиторий, включите «Pipeline» → «Jenkinsfile» → «Branch Specifier».
+9. **Запустите** и наблюдайте за логами в реальном времени.
+
+---
+
+## Полезные ссылки
+
+| Что | Где искать |
+|-----|------------|
+| Официальная документация Pipeline | https://www.jenkins.io/doc/book/pipeline/ |
+| Список шагов (steps) | https://www.jenkins.io/doc/pipeline/steps/ |
+| Shared Libraries | https://www.jenkins.io/doc/book/pipeline/shared-libraries/ |
+| SonarQube integration | https://www.jenkins.io/doc/pipeline/steps/sonarqube/ |
+
+---
+
+### Итоги
+
+- **Jenkinsfile** — текстовый файл, описывающий весь процесс CI/CD.
+- **Declarative pipeline** – простая и читаемая структура.
+- **Scripted pipeline** – полноценный Groovy‑код для сложных сценариев.
+- **Stages / Steps** – этапы и действия внутри них.
+- **Post** – чистка, отчёты, уведомления.
+- **Параметры, переменные, креды** – делают пайплайн гибким и безопасным.
+- **Shared Libraries** – переиспользуемый код для нескольких проектов.
+
+Надеюсь, теперь у вас есть чёткое представление о том, как выглядит и работает файл pipeline в Jenkins.
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>GitHub Actions</summary>
+    <p style='font-size: 14px'>
+
+## Что такое GitHub Actions?
+
+GitHub Actions – это встроенная CI/CD‑платформа, которая позволяет автоматически запускать скрипты, сборки, тесты, деплой и многое другое прямо из репозитория GitHub.
+* **CI** – Continuous Integration (непрерывная интеграция).
+* **CD** – Continuous Delivery/Deployment (непрерывная доставка/развертывание).
+
+Всё управляется через YAML‑файлы, которые размещаются в каталоге `.github/workflows/` вашего репозитория.
+
+---
+
+## Как выглядит типичная конфигурация
+
+```yaml
+name: Java CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:      # ручной запуск через UI
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ 17, 21 ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: Build and test
+        run: mvn -B clean verify
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: target/surefire-reports/*.xml
+```
+
+### Что здесь происходит?
+
+| Секция | Что делает |
+|--------|------------|
+| `name` | Имя workflow‑а, видимое в UI |
+| `on` | Триггеры: push, pull_request, cron, ручной запуск и т.д. |
+| `jobs` | Один workflow может содержать несколько jobs (задач). |
+| `runs-on` | Оператор (runner), на котором будет выполняться job. |
+| `strategy.matrix` | Параллельный запуск для разных значений (Java 17, 21). |
+| `steps` | Последовательность действий внутри job. |
+| `uses` | Подключение готовых actions из Marketplace. |
+| `run` | Запуск произвольной команды. |
+| `with` | Параметры для actions. |
+| `secrets` | Переменные, которые берутся из настроек репозитория. |
+
+---
+
+## Как создать свой workflow
+
+1. **Создайте каталог** `.github/workflows/` в корне репозитория (если его нет).
+2. **Добавьте YAML‑файл** (например, `java-ci.yml`) с описанием.
+3. **Пушьте файл** в ветку `main` (или в любую ветку, где вы хотите, чтобы он работал).
+4. Перейдите в репозиторий → *Actions* → *Your workflow* → *Run workflow* (если вы включили `workflow_dispatch`).
+5. После коммита вы увидите запуск в разделе *Actions*.
+
+> **Совет:** можно редактировать workflow прямо в веб‑UI GitHub, но для полноценной истории лучше хранить файл в репозитории.
+
+---
+
+## Полезные фишки и настройки
+
+| Что | Как использовать |
+|-----|------------------|
+| **Секреты** (`secrets`) | Добавьте в *Settings → Secrets → Actions* и используйте как `${{ secrets.NAME }}`. |
+| **Провайдеры** (`actions/checkout`, `actions/setup-java`, `actions/cache`) | Используйте готовые actions, чтобы не писать скрипты с нуля. |
+| **Matrix** | Параллельно тестируйте на разных версиях Java, ОС или конфигурациях. |
+| **Environment** | Укажите окружение (`environment: production`) и включите approvals (одобрения). |
+| **Concurrency** | Ограничьте одновременные запуски: `concurrency: { group: '${{ github.workflow }}-${{ github.ref }}', cancel-in-progress: true }`. |
+| **Artifacts** | Сохраняйте отчёты, логи, артефакты сборки для скачивания. |
+| **Caching** | Сохраните зависимости (Maven, Gradle) для ускорения сборок. |
+| **Workflow dispatch** | Позволяет запускать workflow вручную с параметрами. |
+| **Scheduled runs** | `schedule: - cron: '0 2 * * *'` – еженедельные/ежедневные сборки. |
+| **Self‑hosted runners** | Если нужны специфические версии JDK/OS, запустите свой runner. |
+| **Permissions** | Ограничьте доступ к токену GitHub (`permissions: contents: read, actions: write`). |
+| **Debugging** | Включите `ACTIONS_STEP_DEBUG` и `ACTIONS_RUNNER_DEBUG` в Secrets, чтобы видеть более подробные логи. |
+| **Local testing** | `act` – инструмент, который запускает workflow локально на Docker. |
+
+---
+
+## Мини‑шаги для новичка
+
+1. **Создайте репозиторий** (или откройте существующий).
+2. В корне создайте `.github/workflows/ci.yml`.
+3. Вставьте приведённый выше пример.
+4. Добавьте секрет `CODECOV_TOKEN` в Settings → Secrets (если хотите отправлять coverage).
+5. Сделайте коммит и push.
+6. Откройте вкладку *Actions* → выберите ваш workflow → *Run workflow* (если хотите протестировать вручную).
+7. Посмотрите логи и убедитесь, что всё прошло успешно.
+
+---
+
+## Итог
+
+GitHub Actions – это мощный и гибкий инструмент, который позволяет автоматизировать практически любой процесс, связанный с вашим кодом. Просто создайте YAML‑файл в `.github/workflows/`, настройте триггеры и шаги, и ваш CI/CD будет работать «под капотом» без дополнительного сервера.
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>GitHub Actions – параметры и функции</summary>
+    <p style='font-size: 14px'>
+
+# GitHub Actions – параметры и функции (обзор)
+
+> **GitHub Actions** — инструмент CI/CD, встроенный в GitHub.  
+> Вы описываете *workflow* в YAML‑файле (`.github/workflows/…yml`) и
+> GitHub автоматически запускает его при заданных событиях.
+
+Ниже собран список **параметров** и **функций**, которые можно использовать
+в workflow, jobs, step‑ах и в выражениях.  
+Кратко, но с примерами.
+
+---
+
+## 1. Структура workflow
+
+```yaml
+name: CI
+on:          # триггеры
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize]
+env:         # переменные уровня workflow
+  GLOBAL_VAR: \"value\"
+
+jobs:        # набор job‑ов
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo \"Hello world\"
+```
+
+| Параметр | Что делает | Пример |
+|----------|------------|--------|
+| `name` | Имя workflow (показывается в UI) | `name: Deploy to prod` |
+| `on` | Триггеры | `push`, `pull_request`, `workflow_dispatch`, `schedule`, `workflow_call`, `workflow_run`, `repository_dispatch` |
+| `env` | Переменные, доступные всем job‑ам | `env: DB_HOST: localhost` |
+| `defaults` | Указывает значения по умолчанию для `run` и `uses` | `defaults: run: shell: bash` |
+| `permissions` | Уровень доступа к API GitHub | `permissions: contents: read, issues: write` |
+| `concurrency` | Предотвращает одновременный запуск | `concurrency: group: deploy-${{ github.ref }}` |
+| `secrets` | Секреты, которые можно использовать в workflow | `secrets: MY_SECRET` |
+| `outputs` | Выходные значения, доступные в других workflow | `outputs: build_status: ${{ steps.build.outputs.status }}` |
+
+> **Замечание**: `secrets` и `variables` можно объявлять в репозитории
+> или в конкретном *environment*.
+
+---
+
+## 2. Триггеры (`on`)
+
+| Триггер | Параметры | Пример |
+|---------|-----------|--------|
+| `push` | `branches`, `tags`, `paths`, `paths-ignore` | `push: branches: [main], tags: ['v*']` |
+| `pull_request` | `branches`, `types`, `paths` | `pull_request: types: [opened, synchronize]` |
+| `workflow_dispatch` | `inputs` (с описанием, типом, дефолтом) | `workflow_dispatch: inputs: env: {description: \"Env\", required: true, default: \"dev\"}` |
+| `schedule` | `cron` | `schedule: cron: '0 0 * * *'` |
+| `workflow_call` | `inputs`, `outputs`, `secrets` | `workflow_call: inputs: {version: {required: true}}` |
+| `workflow_run` | `workflow`, `branches`, `types` | `workflow_run: workflow: Build, types: [completed]` |
+| `repository_dispatch` | `event_type`, `client_payload` | `repository_dispatch: event_type: deploy, client_payload: {env: prod}` |
+
+---
+
+## 3. Jobs
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ github.event_name == 'push' }}
+    env:
+      TEST_ENV: \"staging\"
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [12, 14, 16]
+      fail-fast: false
+      max-parallel: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+```
+
+| Параметр | Что делает | Пример |
+|----------|------------|--------|
+| `runs-on` | Определяет runner (машину) | `ubuntu-latest`, `windows-2022`, `[self-hosted, linux]` |
+| `needs` | Зависимости: job‑ы, которые должны завершиться успешно | `needs: [build, lint]` |
+| `if` | Условие запуска job‑а | `if: ${{ github.ref == 'refs/heads/main' }}` |
+| `env` | Переменные уровня job‑а | `env: LOG_LEVEL: debug` |
+| `strategy` | Конфигурация matrix, fail‑fast, max‑parallel, dry‑run | `strategy: matrix: {node: [12,14,16]}` |
+| `timeout-minutes` | Ограничение времени выполнения | `timeout-minutes: 30` |
+| `continue-on-error` | Игнорировать ошибки (job считается успешным) | `continue-on-error: true` |
+| `services` | Запуск Docker‑контейнеров как зависимостей | `services: postgres: image: postgres:13` |
+| `container` | Выполнение всего job‑а в контейнере | `container: node:18` |
+| `outputs` | Выходные значения, доступные другим job‑ам | `outputs: test_result: ${{ steps.test.outputs.result }}` |
+| `concurrency` | Группа и отмена предыдущих запусков | `concurrency: group: test-${{ github.ref }}` |
+
+---
+
+## 4. Steps
+
+```yaml
+steps:
+  - name: Checkout code
+    uses: actions/checkout@v4
+
+  - name: Set up Java
+    uses: actions/setup-java@v4
+    with:
+      distribution: temurin
+      java-version: 17
+
+  - name: Build
+    run: mvn -B package
+    shell: bash
+    env:
+      MAVEN_OPTS: \"-Xmx1g\"
+
+  - name: Upload artifact
+    uses: actions/upload-artifact@v4
+    with:
+      name: my-artifact
+      path: target/*.jar
+```
+
+| Параметр | Что делает | Пример |
+|----------|------------|--------|
+| `name` | Читаемое имя шага | `name: Build` |
+| `uses` | Использование готового action | `uses: actions/checkout@v4` |
+| `run` | Выполнение shell‑команд | `run: echo \"Hello\"` |
+| `with` | Параметры, передаваемые в action | `with: java-version: 11` |
+| `env` | Переменные уровня шага | `env: MY_VAR: 123` |
+| `shell` | Язык скрипта (bash, pwsh, cmd, powershell) | `shell: pwsh` |
+| `id` | Идентификатор шага, нужен для ссылок и outputs | `id: build` |
+| `continue-on-error` | Игнорировать ошибку шага | `continue-on-error: true` |
+| `if` | Условие запуска шага | `if: ${{ success() }}` |
+| `timeout-minutes` | Ограничение времени шага | `timeout-minutes: 10` |
+
+> **Шаги можно ссылаться друг на друга**:  
+> `steps.build.outputs.artifact_id` или `jobs.build.outputs.result`.
+
+---
+
+## 5. Actions
+
+| Тип | Как объявляется | Что передаётся |
+|-----|-----------------|---------------|
+| **Marketplace** | `uses: actions/checkout@v4` | `with:` |
+| **Composite** | `uses: ./.github/actions/my-action` | `with:` |
+| **Reusable workflow** | `uses: ./.github/workflows/reusable.yml` | `with:`, `secrets:`, `inputs:` |
+
+**Параметры `with`:** ключ‑значение, описанные в README action‑а.  
+**Параметры `secrets`:** секреты, которые будут доступны в action‑е.  
+**Параметры `id`:** позволяет использовать `steps.<id>.outputs.<output>`.
+
+---
+
+## 6. Контексты и выражения
+
+Контексты позволяют получать данные о событии, runner‑е, job‑е и т.д.
+
+| Контекст | Как использовать | Пример |
+|----------|------------------|--------|
+| `github` | Информация о событии | `${{ github.event_name }}` |
+| `env` | Переменные окружения | `${{ env.MY_VAR }}` |
+| `job` | Информация о job‑е | `${{ job.status }}` |
+| `steps` | Выходы шагов | `${{ steps.build.outputs.artifact }}` |
+| `runner` | Информация о runner‑е | `${{ runner.os }}` |
+| `matrix` | Значения матрицы | `${{ matrix.os }}` |
+| `strategy` | Информация о стратегии | `${{ strategy.job-index }}` |
+
+### Функции выражений
+
+| Функция | Что делает | Пример |
+|---------|------------|--------|
+| `contains` | Проверяет, содержит ли строка/массив | `${{ contains(github.ref, 'refs/heads/main') }}` |
+| `startsWith` | Проверяет начало строки | `${{ startsWith(github.ref, 'refs/heads/') }}` |
+| `endsWith` | Проверяет конец строки | `${{ endsWith(github.ref, '/release') }}` |
+| `format` | Форматирование строки | `${{ format('Deploy to {0}', github.ref) }}` |
+| `join` | Соединяет массив в строку | `${{ join(matrix.os, ', ') }}` |
+| `toJSON` | Преобразует в JSON | `${{ toJSON(github) }}` |
+| `fromJSON` | Парсит JSON | `${{ fromJSON('{\"a\":1}') }}` |
+| `toUpperCase` / `toLowerCase` | Приведение к регистру | `${{ toUpperCase(github.actor) }}` |
+| `replace` | Замена подстроки | `${{ replace(github.ref, 'refs/heads/', '') }}` |
+| `toString` / `toNumber` | Приведение типов | `${{ toNumber('42') }}` |
+| `github.event_name` | Имя события | `${{ github.event_name }}` |
+| `github.actor` | Пользователь, инициировавший событие | `${{ github.actor }}` |
+| `github.ref` | Git‑реф | `${{ github.ref }}` |
+| `github.sha` | SHA коммита | `${{ github.sha }}` |
+| `github.repository` | Репозиторий | `${{ github.repository }}` |
+| `github.workspace` | Путь к рабочей директории | `${{ github.workspace }}` |
+
+> **Условные выражения**:  
+> `if: ${{ success() && github.ref == 'refs/heads/main' }}`
+
+---
+
+## 7. Секреты и переменные
+
+| Где объявляется | Как обращаться | Пример |
+|-----------------|----------------|--------|
+| **Repository secrets** | `${{ secrets.MY_SECRET }}` | `env: DB_PASS: ${{ secrets.DB_PASS }}` |
+| **Environment secrets** | `${{ secrets.MY_SECRET }}` | `environment: prod` |
+| **Workflow secrets** | `${{ secrets.MY_SECRET }}` | `secrets: MY_SECRET` |
+| **Variables** | `${{ vars.MY_VAR }}` | `env: MY_VAR: ${{ vars.MY_VAR }}` |
+
+> Секреты автоматически шифруются и не попадают в логи.
+
+---
+
+## 8. Сервисы и контейнеры
+
+```yaml
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: mypass
+        ports:
+          - 5432:5432
+    steps:
+      - run: psql -h localhost -U postgres -c \"SELECT 1;\"
+```
+
+- `services` – Docker‑контейнеры, которые живут дольше, чем шаг.
+- `container` – весь job выполняется внутри одного контейнера.
+
+---
+
+## 9. Конкурентность
+
+```yaml
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+```
+
+- **group** – уникальный ключ, по которому группируются runs.
+- **cancel-in-progress** – отменяет предыдущий незавершённый run, если он существует.
+
+---
+
+## 10. Permissions
+
+```yaml
+permissions:
+  contents: read
+  actions: read
+  checks: write
+```
+
+- Ограничивает доступ к API GitHub.
+- Можно задать на уровне workflow или job.
+- По умолчанию: `contents: read`, остальные `write`.
+
+---
+
+## 11. Reusable workflows (вызываемые workflow)
+
+```yaml
+# .github/workflows/reusable.yml
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+    outputs:
+      built:
+        description: \"Build status\"
+        type: boolean
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo \"Building version ${{ inputs.version }}\"
+    outputs:
+      built: true
+```
+
+Вызывается так:
+
+```yaml
+jobs:
+  call:
+    uses: ./.github/workflows/reusable.yml
+    with:
+      version: \"1.2.3\"
+    secrets: inherit
+```
+
+---
+
+## 12. Полезные ссылки
+
+- [Документация GitHub Actions](https://docs.github.com/en/actions)
+- [Marketplace](https://github.com/marketplace?type=actions)
+- [Список функций выражений](https://docs.github.com/en/actions/learn-github-actions/expressions#expression-functions)
+
+---
+
+## 13. Мини‑пример: CI/CD для Java проекта
+
+```yaml
+name: Java CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  MAVEN_OPTS: \"-Xmx1g\"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [11, 17]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      - name: Build and test
+        run: mvn -B verify
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report-${{ matrix.java }}
+          path: target/surefire-reports
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy
+        run: echo \"Deploying to prod...\"
+```
+
+---
+
+### Итоги
+
+* **workflow** – файл конфигурации, описывающий весь процесс.
+* **triggers** – `on`, задают, когда запускается workflow.
+* **jobs** – отдельные задачи, которые могут выполняться параллельно.
+* **steps** – отдельные команды/Actions внутри job‑а.
+* **contexts & expressions** – позволяют динамически получать данные и
+  принимать решения.
+* **permissions, secrets, variables** – безопасность и конфигурация.
+* **concurrency** – предотвращает конфликтующие запуски.
+* **reusable workflows** – позволяют переиспользовать логику в разных проектах.
+</p>
+    </details>
+</details>
+
+<details>    
 <summary style='font-size: 20px'><b>Наш проект</b></summary>
     <details style='margin-left: 20px'>
     <summary style='font-size: 16px'>TestNG</summary>
