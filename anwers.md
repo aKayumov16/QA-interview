@@ -23604,6 +23604,135 @@ c.close();
 </p>
     </details>
     <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Гарантии доставки сообщений в Kafka</summary>
+    <p style='font-size: 14px'>
+
+## Гарантии доставки сообщений в Kafka
+
+| Гарантия | Что значит | Как достигается |
+|----------|------------|-----------------|
+| **At‑most‑once** | Сообщение может быть потеряно, но никогда не дублируется. | `acks=0` (просьба писать без подтверждения). |
+| **At‑least‑once** | Сообщение гарантированно попадёт в брокер хотя бы один раз, но может дублироваться. | `acks=1` (подтверждение от лидера) или `acks=all` (подтверждение от всех реплик). |
+| **Exactly‑once** | Сообщение гарантированно доставлено ровно один раз. | 1) **Idempotence** – включён `enable.idempotence=true` (Kafka сам отслеживает повторные записи).<br>2) **Transactions** – `transactional.id` + `KafkaProducer.initTransactions()`, `beginTransaction()`, `commitTransaction()` (пакетная запись без промежуточных состояний). |
+
+### Ключевые моменты
+
+1. **Replication** – каждая часть (partition) имеет лидера и резервные реплики. Репликация повышает надёжность, но сама по себе не гарантирует доставку.
+2. **Acknowledgements (`acks`)** – уровень подтверждения от брокеров:
+    * `acks=0` – не ждёт подтверждения (быстро, но ненадёжно).
+    * `acks=1` – ждёт подтверждения от лидера (покрывает большинство случаев).
+    * `acks=all` – ждёт подтверждения от всех синхронных реплик (самый надёжный, но медленнее).
+3. **Idempotence** – при включении Kafka проверяет `producer_id` + `sequence_number`, чтобы не записать дубли.
+4. **Transactions** – позволяют группировать несколько записей в атомарный блок: либо все попали, либо ни одного. Это основа `exactly‑once`.
+
+### Как это выглядит в коде (Java)
+
+```java
+Properties props = new Properties();
+props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, \"broker1:9092\");
+props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);          // idempotence
+props.put(ProducerConfig.ACKS_CONFIG, \"all\");                       // at least once + safety
+props.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, \"my-transactional-id\");
+
+KafkaProducer<String, String> producer = new KafkaProducer<>(props);
+producer.initTransactions();   // инициализация транзакций
+
+try {
+    producer.beginTransaction();
+    producer.send(new ProducerRecord<>(\"topic\", \"key\", \"value\"));
+    // другие отправки…
+    producer.commitTransaction();
+} catch (ProducerFencedException | OutOfOrderSequenceException | AuthorizationException e) {
+    producer.abortTransaction(); // откат при ошибке
+}
+```
+
+### Итог
+
+- **At‑most‑once**: `acks=0`.
+- **At‑least‑once**: `acks=1` или `acks=all` + обычный `send`.
+- **Exactly‑once**: включить `enable.idempotence=true` и/или использовать транзакции (`transactional.id`).
+
+Выбирайте настройку в зависимости от требований к надёжности и задержке.
+</p>
+    </details>
+    <details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Политика хранения</summary>
+    <p style='font-size: 14px'>
+
+## Что такое Retention Policy в Kafka
+
+Retention Policy (политика хранения) определяет **на сколько времени** и **на сколько места** Kafka будет хранить сообщения в топиках, прежде чем удалять старые сегменты лога.
+
+| Параметр | Что делает | Значение по умолчанию |
+|----------|------------|----------------------|
+| `retention.ms` | Время (мс), в течение которого сообщения сохраняются. | `604800000` (7 дней) |
+| `retention.bytes` | Максимальный размер лога топика (байты). | `-1` (без ограничений) |
+| `segment.bytes` | Размер одного сегмента лога. | `1073741824` (1 GB) |
+| `segment.ms` | Максимальное время, в течение которого сегмент остаётся открытым. | `604800000` (7 дней) |
+
+### Как это работает
+
+1. **Запись** – Kafka пишет сообщения в открытый сегмент лога.
+2. **Сегмент закрывается** – когда достигается `segment.bytes` или `segment.ms`.
+3. **Удаление** – после того как сегмент становится «старым» (время старше `retention.ms` или размер превышает `retention.bytes`), Kafka удаляет его целиком.
+
+> **Важно:** удаление происходит целиком по сегменту, а не по отдельным сообщениям.
+
+### Конфигурирование
+
+#### По умолчанию (broker‑wide)
+
+```bash
+# server.properties
+log.retention.hours=168          # 7 дней
+log.retention.bytes=-1           # без ограничения по размеру
+log.segment.bytes=1073741824     # 1 GB
+```
+
+#### По отдельному топику
+
+```bash
+kafka-configs.sh --bootstrap-server localhost:9092 \\
+  --entity-type topics --entity-name my-topic \\
+  --alter --add-config retention.ms=86400000   # 1 день
+```
+
+или в JSON‑формате:
+
+```json
+{
+  \"retention.ms\": 86400000,
+  \"retention.bytes\": 10737418240
+}
+```
+
+### Что происходит с consumer‑offsets
+
+- Если вы читаете после того, как Kafka уже удалил сегмент, вы можете потерять доступ к старым сообщениям, но **offset‑ы** остаются корректными (если они ещё в пределах `offset.retention.minutes`).
+- В случае, если `retention.ms` слишком короткий, consumer может «застрять» в старом сегменте, который уже удалён. Нужно убедиться, что потребитель не задерживается.
+
+### Сравнение с Log Compaction
+
+| Политика | Что удаляет | Когда |
+|----------|-------------|-------|
+| **Retention** | Старые сообщения по времени/размеру | По `retention.ms/bytes` |
+| **Compaction** | Старые версии ключа | По `cleanup.policy=compact` |
+
+> Вы можете комбинировать: `cleanup.policy=compact,delete`.
+
+### Быстрый чек
+
+```bash
+# Показать конфиги топика
+kafka-configs.sh --bootstrap-server localhost:9092 \\
+  --entity-type topics --entity-name my-topic --describe
+```
+
+Надеюсь, теперь понятнее, как Kafka управляет хранением данных и какие настройки можно менять.
+</p>
+    </details>
+    <details style='margin-left: 20px'>
     <summary style='font-size: 16px'>Java SQL</summary>
     <p style='font-size: 14px'>
 
