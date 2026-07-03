@@ -3644,7 +3644,7 @@ Selenide.alert().accept();
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Cookies, LocalStorage и SessionStorage</summary>
     <p style='font-size: 14px'>
 
 ## Как работать с Cookies, LocalStorage и SessionStorage в Selenium и Selenide
@@ -3806,48 +3806,6 @@ public class StorageExample {
 - Добавлять, читать и удалять **Cookies**.
 - Чтение/запись/удаление **LocalStorage** и **SessionStorage** через JavaScript.
 - Делать всё это в Selenium и в удобном фреймворке **Selenide**.
-</p>
-    </details>
-    <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
-    <p style='font-size: 14px'>
-
-    Текст
-</p>
-    </details>
-    <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
-    <p style='font-size: 14px'>
-
-    Текст
-</p>
-    </details>
-    <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
-    <p style='font-size: 14px'>
-
-    Текст
-</p>
-    </details>
-    <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
-    <p style='font-size: 14px'>
-
-    Текст
-</p>
-    </details>
-    <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
-    <p style='font-size: 14px'>
-
-    Текст
-</p>
-    </details>
-    <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
-    <p style='font-size: 14px'>
-
-    Текст
 </p>
     </details>
 </details>
