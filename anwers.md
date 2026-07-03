@@ -8359,122 +8359,2653 @@ jobs:
 <details>    
 <summary style='font-size: 20px'><b>AssertJ</b></summary>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>AssertJ – краткое введение</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – краткое введение
+
+### Что такое AssertJ?
+AssertJ – это библиотека для **проверок (assertions)** в тестах Java.  
+Она заменяет стандартный `org.junit.Assert` / `org.testng.Assert` и предоставляет более выразительный, удобный и читаемый синтаксис.
+
+### Зачем он нужен?
+| Плюс | Пример |
+|------|--------|
+| **Читаемость** – тесты читаются как обычный язык. | `assertThat(list).hasSize(3).contains(\"foo\")` |
+| **Больше проверок** – тысячи удобных методов (`isEmpty()`, `containsOnly`, `isCloseTo`, …). | `assertThat(value).isCloseTo(10, within(1))` |
+| **Гибкость** – можно легко добавлять собственные assertions через `assertThat(...).usingRecursiveComparison()` и др. |
+| **Отладка** – при падении теста выводится понятное сообщение, а не просто «expected X, got Y». |
+
+### Почему он «fluent» (читаемый, цепочный)?
+- **Методы возвращают сам объект** (`Assertions.assertThat(...)` возвращает объект, у которого можно вызвать ещё один метод).
+- **Цепочка вызовов** позволяет писать одну длинную строку, где каждая проверка добавляется к предыдущей:
+  ```java
+  assertThat(user)
+      .isNotNull()
+      .hasFieldOrPropertyWithValue(\"name\", \"Alice\")
+      .hasEmailEndingWith(\"@example.com\");
+  ```
+- Такой стиль делает код похожим на естественный язык, упрощает понимание и поддержку тестов.
+
+---
+
+**Итого:** AssertJ – мощный, читаемый и гибкий инструмент для написания assertions в Java‑тестах, который делает ваши тесты понятными и выразительными.
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Установка и подключение</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – установка и подключение
+
+### 1. Maven
+
+```xml
+<dependencies>
+    <!-- AssertJ core -->
+    <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>3.25.3</version> <!-- проверьте последнюю -->
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+```
+
+> **Tip** – Добавьте `<scope>test</scope>`, если библиотека нужна только в тестах.
+
+### 2. Gradle (Groovy DSL)
+
+```groovy
+dependencies {
+    testImplementation 'org.assertj:assertj-core:3.25.3'
+}
+```
+
+### 3. Gradle (Kotlin DSL)
+
+```kotlin
+dependencies {
+    testImplementation(\"org.assertj:assertj-core:3.25.3\")
+}
+```
+
+> **Проверка**  
+> После обновления зависимостей выполните `mvn test` (Maven) или `./gradlew test` (Gradle). Если зависимость скачалась, сборка пройдет успешно.
+
+---
+
+## Как подключить статические импорты
+
+В любом тестовом классе (или в `@BeforeAll`/`@BeforeEach`, если используете JUnit 5):
+
+```java
+import static org.assertj.core.api.Assertions.*;
+```
+
+> Теперь можно писать `assertThat(...).isEqualTo(...)` и т.д. без префикса `Assertions.`
+
+---
+
+## Минимальный пример
+
+```java
+import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+class AssertJExampleTest {
+
+    @Test
+    void simpleEquality() {
+        int actual = 5 + 5;
+        assertThat(actual).isEqualTo(10);
+    }
+
+    @Test
+    void stringContaining() {
+        String greeting = \"Hello, world!\";
+        assertThat(greeting).contains(\"world\");
+    }
+
+    @Test
+    void listSize() {
+        List<String> names = List.of(\"Alice\", \"Bob\", \"Charlie\");
+        assertThat(names).hasSize(3);
+    }
+}
+```
+
+Запустите `mvn test` или `./gradlew test` – все три теста пройдут.  
+Если тесты падают, проверьте, что:
+
+1. **Зависимость** действительно скачалась (проверьте `target/test-classes` или `build/test-classes`).
+2. **Статический импорт** корректен (`import static org.assertj.core.api.Assertions.*;`).
+3. Вы используете JUnit 5 (или JUnit 4, но там тоже работает).
+
+---
+
+### Быстрый чек‑лист
+
+| Шаг | Что проверить |
+|-----|---------------|
+| 1 | В `pom.xml`/`build.gradle` указан `assertj-core` |
+| 2 | Зависимость помечена `test` scope |
+| 3 | В тестах есть `import static org.assertj.core.api.Assertions.*;` |
+| 4 | Тесты запускаются без ошибок |
+
+Если все пункты выполнены, AssertJ готов к использованию!
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Базовый синтаксис</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – базовый синтаксис
+
+```java
+assertThat(actual).isEqualTo(expected);
+```
+
+### Что такое `assertThat`?
+
+| Что | Зачем |
+|-----|-------|
+| `assertThat` – статический метод из `org.assertj.core.api.Assertions` | Создаёт объект‑«утверждение» (Assertion object) для конкретного значения `actual`. |
+| Возвращает объект, который умеет вызывать методы‑утверждения | Позволяет писать тесты в «читаемом» стиле. |
+
+### Цепочка методов (Fluent API)
+
+* Каждый метод‑утверждение (например, `isEqualTo`, `isNotNull`, `contains`, `hasSize` и т.д.)  
+  возвращает **тот же объект‑утверждение**.
+* Поэтому можно писать несколько условий подряд:
+
+```java
+assertThat(list)
+        .isNotEmpty()
+        .hasSize(3)
+        .contains(\"foo\")
+        .doesNotContain(\"bar\");
+```
+
+### Кратко
+
+- **`assertThat(actual)`** – старт: берём реальное значение.
+- **`.isEqualTo(expected)`** – проверяем, что оно равно ожидаемому.
+- **Методы цепляются**: каждый возвращает объект, позволяя писать `... .and(...).or(...)` и т.п.
+- Благодаря статическому импорту (`import static org.assertj.core.api.Assertions.*;`) можно писать без префикса `Assertions.`.
+
+Итого: AssertJ делает тесты читаемыми и лаконичными, а цепочка методов упрощает написание сложных проверок без лишних строк.
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Типы данных</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – основные типы данных, к которым применяются утверждения (assertions)
+
+| № | Тип | Что проверяем | Краткие примеры утверждений |
+|---|-----|---------------|-----------------------------|
+| 1 | **Скалярные** (`int`, `long`, `double`, `boolean`, `enum`) | Простые значения | `assertThat(5).isGreaterThan(3)`<br>`assertThat(true).isTrue()` |
+| 2 | **Объекты** (`String`, `Date`, `LocalDateTime`, `BigDecimal`, другие POJO) | Содержимое, формат, свойства | `assertThat(\"Hello\").startsWith(\"He\")`<br>`assertThat(date).isAfter(now)` |
+| 3 | **Коллекции** (`List`, `Set`, `Map`) | Размер, наличие элементов, порядок | `assertThat(list).hasSize(3)`<br>`assertThat(map).containsEntry(\"key\", \"value\")` |
+| 4 | **Массивы** (`int[]`, `String[]`, и т.п.) | Размер, содержимое, порядок | `assertThat(array).containsExactly(1, 2, 3)` |
+| 5 | **Optional** (`Optional<T>`) | Присутствие/отсутствие значения, конкретное содержимое | `assertThat(optional).isPresent()`<br>`assertThat(optional).contains(\"value\")` |
+
+### Что это значит для тестирования
+
+- **Гибкость**: для каждого типа есть свои методы, которые читаемы и цепочечны (`then().isEqualTo(...)`).
+- **Читаемость**: утверждения читаются почти как обычный язык – `assertThat(value).isEqualTo(expected)`.
+- **Расширяемость**: можно добавить собственные `Assert` для кастомных классов.
+
+> **Важно:** при работе с коллекциями и массивами всегда проверяйте не только наличие элементов, но и порядок, если это важно для бизнес‑логики.
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Часто используемые утверждения</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – быстрое и читаемое утверждение в Java
+
+> **AssertJ** – это библиотека для *fluent assertions* (читаемые «плавные» утверждения).  
+> Она заменяет классические `assertEquals`, `assertTrue` и т.д. и делает тесты более понятными.
+
+Ниже приведены самые часто используемые утверждения и примеры их применения.
+
+| Утверждение | Что проверяет | Пример |
+|-------------|---------------|--------|
+| `isEqualTo(value)` | Значение равно `value` | `assertThat(actual).isEqualTo(expected);` |
+| `isNotEqualTo(value)` | Значение не равно `value` | `assertThat(actual).isNotEqualTo(unexpected);` |
+| `isNull()` | Объект `null` | `assertThat(obj).isNull();` |
+| `isNotNull()` | Объект не `null` | `assertThat(obj).isNotNull();` |
+| `isTrue()` | Логическое `true` | `assertThat(flag).isTrue();` |
+| `isFalse()` | Логическое `false` | `assertThat(flag).isFalse();` |
+| `isGreaterThan(value)` | Больше `value` | `assertThat(num).isGreaterThan(10);` |
+| `isLessThan(value)` | Меньше `value` | `assertThat(num).isLessThan(5);` |
+| `isBetween(start, end)` | В диапазоне `[start, end]` | `assertThat(num).isBetween(1, 10);` |
+| `contains(substring)` | В строке содержится `substring` | `assertThat(str).contains(\"foo\");` |
+| `doesNotContain(substring)` | В строке НЕ содержится `substring` | `assertThat(str).doesNotContain(\"bar\");` |
+| `startsWith(prefix)` | Строка начинается с `prefix` | `assertThat(str).startsWith(\"Hello\");` |
+| `endsWith(suffix)` | Строка заканчивается `suffix` | `assertThat(str).endsWith(\"World\");` |
+| `containsOnlyOnce(substring)` | `substring` встречается ровно один раз | `assertThat(str).containsOnlyOnce(\"foo\");` |
+| `hasSize(n)` | Коллекция/массив/строка имеет размер `n` | `assertThat(list).hasSize(3);` |
+| `isEmpty()` | Коллекция/массив/строка пуста | `assertThat(list).isEmpty();` |
+| `isNotEmpty()` | Коллекция/массив/строка НЕ пуста | `assertThat(list).isNotEmpty();` |
+| `containsOnly(elements…)` | Коллекция содержит ровно указанные элементы (не важно порядок) | `assertThat(list).containsOnly(\"a\", \"b\", \"c\");` |
+| `containsExactly(elements…)` | Коллекция содержит элементы в указанном порядке | `assertThat(list).containsExactly(\"a\", \"b\", \"c\");` |
+| `containsExactlyInAnyOrder(elements…)` | Коллекция содержит элементы в любом порядке | `assertThat(list).containsExactlyInAnyOrder(\"c\", \"a\", \"b\");` |
+
+---
+
+### Быстрый совет
+
+- **Fluent**: `assertThat(actual).isEqualTo(expected).isNotNull();`
+- **Readable**: Тест читается как простое предложение.
+- **Расширяемость**: Можно легко добавить собственные утверждения.
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Работа с коллекциями и массивами</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – работа с коллекциями и массивами
+
+| Метод | Что делает | Краткий пример |
+|-------|------------|----------------|
+| **`contains`** | Проверяет, что коллекция/массив содержит указанные элементы (необязательно в порядке). | `assertThat(list).contains(1, 3);` |
+| **`containsOnly`** | Проверяет, что коллекция содержит *только* указанные элементы (порядок не важен). | `assertThat(list).containsOnly(1, 3);` |
+| **`containsExactly`** | Проверяет, что коллекция содержит *точно* указанные элементы в том же порядке. | `assertThat(list).containsExactly(1, 3, 5);` |
+| **`containsOnlyOnce`** | Проверяет, что каждый указанный элемент встречается ровно один раз. | `assertThat(list).containsOnlyOnce(1, 3);` |
+| **`doesNotContain`** | Проверяет, что коллекция/массив **не** содержит указанные элементы. | `assertThat(list).doesNotContain(4, 6);` |
+| **`extracting`** | Извлекает значения из коллекции по полю/методу и делает утверждение о полученной коллекции. | `assertThat(list).extracting(\"name\").contains(\"Alice\", \"Bob\");` |
+| **`filteredOn`** | Фильтрует коллекцию по условию (встроенный `Predicate` или строковый фильтр) и делает утверждение о результате. | `assertThat(list).filteredOn(\"age > 30\").hasSize(2);` |
+
+### Быстрые заметки
+
+- **Порядок**: `contains` – не важен, `containsExactly` – важен, `containsOnly` – порядок не важен, но все элементы должны присутствовать.
+- **`extracting`** удобно использовать с Lombok‑генерируемыми геттерами: `extracting(\"id\")`, `extracting(Person::getName)`.
+- **`filteredOn`** поддерживает синтаксис `\"field > 10\"` или `\"field == 'value'\"`. Можно комбинировать с `extracting`.
+
+Эти методы делают AssertJ мощным инструментом для проверки коллекций и массивов без написания громоздкого кода.
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Работа с Map</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – работа с `Map`
+
+| Метод | Что делает | Кратко |
+|-------|------------|--------|
+| `containsEntry(key, value)` | Проверяет, что в карте есть пара **ключ‑значение**. | *Map содержит конкретную запись.* |
+| `doesNotContainEntry(key, value)` | Проверяет, что в карте **нет** такой пары. | *Запись отсутствует.* |
+| `containsOnlyKeys(key1, key2, …)` | Проверяет, что карта содержит **только** указанные ключи (и может содержать любые значения). | *Только нужные ключи.* |
+| `containsOnlyValues(value1, value2, …)` | Проверяет, что карта содержит **только** указанные значения (ключи могут быть любые). | *Только нужные значения.* |
+| `hasSize(n)` | Проверяет, что размер карты ровно `n`. | *Кол-во записей.* |
+
+---
+
+### Как использовать
+
+```java
+import static org.assertj.core.api.Assertions.*;
+
+Map<String, Integer> map = Map.of(
+        \"apple\",  1,
+        \"banana\", 2,
+        \"cherry\", 3
+);
+
+// 1. containsEntry
+assertThat(map).containsEntry(\"apple\", 1);
+
+// 2. doesNotContainEntry
+assertThat(map).doesNotContainEntry(\"durian\", 4);
+
+// 3. containsOnlyKeys
+assertThat(map).containsOnlyKeys(\"apple\", \"banana\", \"cherry\");
+
+// 4. containsOnlyValues
+assertThat(map).containsOnlyValues(1, 2, 3);
+
+// 5. hasSize
+assertThat(map).hasSize(3);
+```
+
+> **Tip**  
+> Если хотите проверить **все** элементы карты, используйте `containsExactlyInAnyOrderEntriesOf(otherMap)` или `containsExactlyInAnyOrderKeysOf(otherMap)`.
+
+---
+
+### Быстрый чек‑лист
+
+- **Пара ключ‑значение** → `containsEntry` / `doesNotContainEntry`
+- **Только нужные ключи** → `containsOnlyKeys`
+- **Только нужные значения** → `containsOnlyValues`
+- **Размер карты** → `hasSize`
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Работа с Optional</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ — Работа с `Optional`
+
+| Метод | Что проверяет | Как использовать |
+|-------|---------------|------------------|
+| `isPresent()` | `Optional` содержит значение | `assertThat(optional).isPresent();` |
+| `isNotPresent()` | `Optional` пуст | `assertThat(optional).isNotPresent();` |
+| `hasValue()` | `Optional` содержит **не‑null** значение | `assertThat(optional).hasValue();` |
+| `hasValueSatisfying(Consumer<T> valueAssert)` | Внутреннее значение удовлетворяет заданному AssertJ‑выражению | `assertThat(optional).hasValueSatisfying(v -> assertThat(v).isEqualTo(expected));` |
+
+> **Важно:**
+> * `isPresent()` / `isNotPresent()` работают только с типом `Optional`.
+> * `hasValue()` и `hasValueSatisfying()` проверяют саму сущность `Optional` и её содержимое.
+
+---
+
+### Примеры
+
+```java
+import static org.assertj.core.api.Assertions.*;
+
+Optional<String> opt = Optional.of(\"test\");
+
+// 1. Проверяем, что значение присутствует
+assertThat(opt).isPresent();          // ok
+
+// 2. Проверяем, что значение присутствует и не null
+assertThat(opt).hasValue();           // ok
+
+// 3. Проверяем, что значение удовлетворяет условию
+assertThat(opt).hasValueSatisfying(v ->
+        assertThat(v).startsWith(\"t\")
+                      .hasSize(4)
+);
+
+// 4. Проверяем отсутствие значения
+Optional<String> empty = Optional.empty();
+assertThat(empty).isNotPresent();     // ok
+```
+
+---
+
+### Когда использовать каждый метод
+
+| Сценарий | Какой метод лучше |
+|----------|-------------------|
+| Нужно убедиться, что `Optional` **не пуст** | `isPresent()` |
+| Нужно убедиться, что `Optional` **пуст** | `isNotPresent()` |
+| Нужно проверить, что `Optional` **содержит не‑null** значение | `hasValue()` |
+| Нужно проверить **содержимое** `Optional` с помощью AssertJ‑условий | `hasValueSatisfying(...)` |
+
+---
+
+### Быстрый чек‑лист
+
+- **`isPresent()`** – только факт наличия.
+- **`hasValue()`** – наличие + не‑null.
+- **`hasValueSatisfying(...)`** – наличие + произвольные проверки внутри.
+
+Используйте `hasValueSatisfying` когда вам нужно проверить конкретные свойства объекта внутри `Optional`, а `isPresent`/`hasValue` – когда нужна простая проверка существования.
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Проверка исключений</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – проверка исключений
+
+| Метод | Что делает | Коротко |
+|-------|------------|---------|
+| `assertThatThrownBy(() -> …)` | Запускает код‑блок и ожидает, что он бросит исключение | “Запусти … и пойми, что будет выброшено” |
+| `.isInstanceOf(Class<?>)` | Проверяет, что тип выброшенного исключения совпадает с указанным (подклассы подходят) | “Это `IllegalArgumentException` (или его потомок)” |
+| `.hasMessageContaining(String)` | Утверждает, что сообщение исключения содержит заданный подстрочный фрагмент | “Сообщение содержит «invalid»” |
+| `.isExactlyInstanceOf(Class<?>)` | Проверяет, что тип исключения **ровно** соответствует указанному, без учёта наследования | “Это именно `NullPointerException`, а не его потомок” |
+| `.hasCauseExactlyInstanceOf(Class<?>)` | Проверяет, что причина (cause) выброшенного исключения имеет точный тип, без наследования | “Причина – именно `IOException`” |
+
+### Мини‑пример
+
+```java
+@Test
+void shouldThrowIllegalArgumentException() {
+    assertThatThrownBy(() -> service.process(null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining(\"input cannot be null\");
+
+    assertThatThrownBy(() -> service.process(\"\"))
+        .isExactlyInstanceOf(IllegalArgumentException.class);
+
+    assertThatThrownBy(() -> service.process(\"bad\"))
+        .hasCauseExactlyInstanceOf(RuntimeException.class);
+}
+```
+
+- **`assertThatThrownBy`** – запустить код.
+- **`isInstanceOf`** – тип (может быть потомком).
+- **`isExactlyInstanceOf`** – тип без наследования.
+- **`hasMessageContaining`** – проверяем часть текста сообщения.
+- **`hasCauseExactlyInstanceOf`** – тип причины (cause) исключения.
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Проверка дат и времени</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ + `java.time`
+
+AssertJ поставляется с готовыми **проверками** для всех типов из пакета `java.time`.  
+Ниже – примеры, как использовать методы
+
+| Метод | Что проверяет | Пример |
+|-------|---------------|--------|
+| `isAfter` | объект происходит позже заданного значения | `assertThat(date).isAfter(LocalDate.of(2023, 1, 1));` |
+| `isBefore` | объект происходит раньше заданного значения | `assertThat(date).isBefore(LocalDate.of(2023, 1, 1));` |
+| `isEqualToIgnoringSeconds` | два временных значения равны, но игнорируются секунды (и наносекунды) | `assertThat(datetime).isEqualToIgnoringSeconds(anotherDatetime, 0);` |
+| `hasYear` | проверяет год | `assertThat(date).hasYear(2023);` |
+| `hasMonth` | проверяет месяц (через `Month` или `int`) | `assertThat(date).hasMonth(Month.APRIL);` |
+| `hasDayOfMonth` | проверяет день месяца | `assertThat(date).hasDayOfMonth(15);` |
+
+> **Важно**: методы `hasYear`, `hasMonth`, `hasDayOfMonth` доступны для `LocalDate`, `LocalDateTime`, `ZonedDateTime` и аналогичных типов.
+
+---
+
+### Полный пример (JUnit 5)
+
+```java
+import static org.assertj.core.api.Assertions.*;
+import java.time.*;
+import org.junit.jupiter.api.Test;
+
+class DateTimeAssertionsTest {
+
+    @Test
+    void should_compare_dates_and_times() {
+        LocalDate today      = LocalDate.of(2024, 7, 3);
+        LocalDate tomorrow   = LocalDate.of(2024, 7, 4);
+        LocalDate yesterday  = LocalDate.of(2024, 7, 2);
+
+        // isAfter / isBefore
+        assertThat(tomorrow).isAfter(today);
+        assertThat(yesterday).isBefore(today);
+
+        // hasYear / hasMonth / hasDayOfMonth
+        assertThat(today).hasYear(2024)
+                          .hasMonth(Month.JULY)
+                          .hasDayOfMonth(3);
+
+        // LocalDateTime – сравнение с игнорированием секунд
+        LocalDateTime now      = LocalDateTime.of(2024, 7, 3, 12, 30, 45, 123_000_000);
+        LocalDateTime sameBut = LocalDateTime.of(2024, 7, 3, 12, 30, 50, 999_999_999);
+
+        assertThat(now).isEqualToIgnoringSeconds(sameBut, 0);
+        // 0 – «игнорировать секунды» (т.е. сравнивать только до минут)
+
+        // ZonedDateTime – сравнение в одной зоне
+        ZonedDateTime utcNow = ZonedDateTime.of(now, ZoneOffset.UTC);
+        ZonedDateTime localNow = ZonedDateTime.of(now, ZoneId.systemDefault());
+
+        assertThat(utcNow.withZoneSameInstant(ZoneOffset.UTC))
+                .isEqualToIgnoringSeconds(localNow.withZoneSameInstant(ZoneOffset.UTC), 0);
+    }
+}
+```
+
+### Краткие пояснения
+
+| Метод | Что делает | Где применить |
+|-------|------------|---------------|
+| `isAfter` / `isBefore` | Сравнивает два временных значения | Проверка порядка дат/времени |
+| `isEqualToIgnoringSeconds` | Сравнивает два `Temporal` (например, `LocalDateTime`), но игнорирует секунды и наносекунды | Тесты, где точность до секунд не важна (логирование, таймеры) |
+| `hasYear`, `hasMonth`, `hasDayOfMonth` | Проверяют отдельные компоненты даты | Проверка, что дата находится в нужном году/месяце/дне |
+
+> **Совет:**  
+> Если вы работаете с `Instant`, преобразуйте его в `LocalDateTime` или `ZonedDateTime` через `Instant.atZone(...)`, чтобы воспользоваться этими проверками.
+
+---
+
+### Итог
+
+AssertJ делает проверку дат и времени **чёткой и выразительной**.  
+Используйте `isAfter`/`isBefore` для порядка, `isEqualToIgnoringSeconds` для сравнения без точных секунд и `hasXxx` для проверки отдельных компонентов даты. Это избавляет от громоздких `assertEquals` и делает тесты более читаемыми.
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Проверка чисел</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – Проверка чисел
+
+| Метод | Что проверяет | Как использовать |
+|-------|---------------|------------------|
+| **`isCloseTo(expected, offset)`** | Проверяет, что число находится в заданном абсолютном диапазоне от `expected`. | `assertThat(actual).isCloseTo(expected, within(offset));` |
+| **`isCloseToRelative(expected, offset)`** | Проверяет, что число находится в заданном относительном диапазоне (процент/доля) от `expected`. | `assertThat(actual).isCloseToRelative(expected, within(offset));` |
+| **`isPositive()`** | Проверяет, что число > 0. | `assertThat(actual).isPositive();` |
+| **`isNegative()`** | Проверяет, что число < 0. | `assertThat(actual).isNegative();` |
+
+---
+
+### 1. `isCloseTo`
+
+```java
+double actual = 3.1415;
+double expected = Math.PI;          // 3.141592653589793
+double tolerance = 0.0001;          // абсолютное отклонение
+
+assertThat(actual).isCloseTo(expected, within(tolerance));
+```
+
+- **Когда использовать?**  
+  Когда нужно сравнить числа с учётом погрешности (например, при работе с плавающей точкой).
+- **Параметры**
+    - `expected` – значение, к которому сравниваем.
+    - `offset` – объект `Offset`, создаётся через `within(value)`.
+
+---
+
+### 2. `isCloseToRelative`
+
+```java
+double actual = 105;
+double expected = 100;
+double percent = 0.05; // 5%
+
+assertThat(actual).isCloseToRelative(expected, within(percent));
+```
+
+- **Когда использовать?**  
+  Когда важна относительная погрешность (процентное отклонение).
+- **Параметры**
+    - `expected` – базовое значение.
+    - `offset` – относительный отклонение, задаётся через `within(percent)`.
+
+---
+
+### 3. `isPositive` / `isNegative`
+
+```java
+int a = 10;
+int b = -7;
+
+assertThat(a).isPositive();   // пройдёт
+assertThat(b).isNegative();   // пройдёт
+```
+
+- `isPositive()` проверяет, что `value > 0`.
+- `isNegative()` проверяет, что `value < 0`.
+
+> **Важно:** `0` считается ни положительным, ни отрицательным, поэтому `isPositive()` и `isNegative()` для нуля не проходят.
+
+---
+
+### Полезные варианты
+
+- **Проверка нуля**: `assertThat(value).isZero();`
+- **Проверка диапазона**: `assertThat(value).isBetween(lower, upper);`
+- **Проверка целочисленного диапазона**: `assertThat(value).isIn(1, 2, 3);`
+
+--- 
+
+### Итог
+
+- **`isCloseTo`** – абсолютная точность.
+- **`isCloseToRelative`** – относительная точность (процент).
+- **`isPositive` / `isNegative`** – простые проверки знака.
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Проверка строк</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – проверка строк
+
+| Метод | Что проверяет | Коротко |
+|-------|---------------|---------|
+| `contains(...)` | Строка содержит заданный подстроку(ы) | `assertThat(text).contains(\"foo\")` |
+| `doesNotContain(...)` | Строка **не** содержит заданную подстроку(ы) | `assertThat(text).doesNotContain(\"bar\")` |
+| `startsWith(...)` | Строка начинается с указанной подстроки | `assertThat(text).startsWith(\"Hello\")` |
+| `endsWith(...)` | Строка заканчивается указанной подстрокой | `assertThat(text).endsWith(\"World\")` |
+| `matches(...)` | Строка соответствует регулярному выражению | `assertThat(text).matches(\"\\\\d{3}-\\\\d{2}-\\\\d{4}\")` |
+| `hasSameTextualRepresentation(...)` | Строка имеет точно такой же текст, как в другом объекте | `assertThat(text).hasSameTextualRepresentation(otherString)` |
+
+> **Tip** – все методы возвращают `Assert` объект, так что их можно цеплять:  
+> `assertThat(text).startsWith(\"A\").contains(\"mid\").endsWith(\"Z\");`
+
+Таким образом, AssertJ позволяет писать читаемые и лаконичные проверки строк.
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Custom Assertions</summary>
     <p style='font-size: 14px'>
 
-Текст
+## Как написать собственный класс `MyObjectAssert` в AssertJ
+
+### 1. Структура класса
+```java
+import org.assertj.core.api.AbstractAssert;
+
+public class MyObjectAssert extends AbstractAssert<MyObjectAssert, MyObject> {
+
+    // Конструктор
+    protected MyObjectAssert(MyObject actual) {
+        super(actual, MyObjectAssert.class);
+    }
+
+    // Статический фабричный метод
+    public static MyObjectAssert assertThat(MyObject actual) {
+        return new MyObjectAssert(actual);
+    }
+
+    // Ваши собственные проверки
+    public MyObjectAssert isSomething() {
+        // Пример: проверяем, что поле name не пустое
+        isNotNull(); // гарантируем, что объект не null
+        if (actual.getName() == null || actual.getName().isEmpty()) {
+            failWithMessage(\"Expected name to be non‑empty but was <%s>\", actual.getName());
+        }
+        return this; // чтобы можно было цеплять дальше
+    }
+
+    // Можно добавить много методов: hasAgeGreaterThan, etc.
+}
+```
+
+> **Ключевые моменты**
+| Что | Как |
+|-----|-----|
+| Наследование | `extends AbstractAssert<YourAssert, YourType>` |
+| Конструктор | `super(actual, YourAssert.class)` |
+| Статический `assertThat` | Вспомогательный фабричный метод |
+| Возврат `this` | Для цепочки вызовов |
+
+---
+
+### 2. Использование
+```java
+MyObject obj = new MyObject(\"John\", 30);
+
+MyObjectAssert.assertThat(obj)
+              .isSomething()
+              .hasAgeGreaterThan(20);   // если такой метод реализован
+```
+
+---
+
+## Встроенная рекурсивная проверка `usingRecursiveComparison()`
+
+AssertJ умеет сравнивать объекты «глубоко» – рекурсивно проверяя все поля.
+
+```java
+import static org.assertj.core.api.Assertions.assertThat;
+
+MyObject expected = new MyObject(\"John\", 30);
+MyObject actual   = new MyObject(\"John\", 30);
+
+assertThat(actual)
+    .usingRecursiveComparison()
+    .isEqualTo(expected);
+```
+
+### Что делает `usingRecursiveComparison()`
+
+| Что | Как работает |
+|-----|--------------|
+| Рекурсивно сравнивает поля | Для каждого поля берётся значение и сравнивается с полем другого объекта. |
+| Поддерживает вложенные объекты | Если поле – объект, то сравнение продолжается внутри него. |
+| Можно настроить | `ignoringFields(\"id\")`, `withStrictTypeChecking()`, `usingElementComparatorOnFields(...)` |
+
+### Пример с настройкой
+
+```java
+assertThat(actual)
+    .usingRecursiveComparison()
+    .ignoringFields(\"createdAt\", \"updatedAt\")   // игнорируем поля даты
+    .isEqualTo(expected);
+```
+
+---
+
+### Когда использовать
+
+- **Сложные объекты** с множеством вложенных полей.
+- **Глубокое сравнение** без ручной реализации `equals`.
+- **Тесты, где важна точность всех атрибутов** (например, DTO‑объекты).
+
+---
+
+## Полный пример
+
+```java
+// 1. Класс, который будем сравнивать
+class MyObject {
+    private String name;
+    private int age;
+    // getters, конструктор, etc.
+}
+
+// 2. Своё Assert
+class MyObjectAssert extends AbstractAssert<MyObjectAssert, MyObject> {
+    protected MyObjectAssert(MyObject actual) {
+        super(actual, MyObjectAssert.class);
+    }
+
+    public static MyObjectAssert assertThat(MyObject actual) {
+        return new MyObjectAssert(actual);
+    }
+
+    public MyObjectAssert hasName(String expectedName) {
+        isNotNull();
+        if (!actual.getName().equals(expectedName)) {
+            failWithMessage(\"Expected name to be <%s> but was <%s>\", expectedName, actual.getName());
+        }
+        return this;
+    }
+
+    public MyObjectAssert hasAgeGreaterThan(int minAge) {
+        isNotNull();
+        if (actual.getAge() <= minAge) {
+            failWithMessage(\"Expected age to be greater than <%d> but was <%d>\", minAge, actual.getAge());
+        }
+        return this;
+    }
+}
+
+// 3. Тест
+@Test
+void testCustomAssertAndRecursiveComparison() {
+    MyObject expected = new MyObject(\"Alice\", 25);
+    MyObject actual   = new MyObject(\"Alice\", 25);
+
+    // Custom assert
+    MyObjectAssert.assertThat(actual)
+                  .hasName(\"Alice\")
+                  .hasAgeGreaterThan(20);
+
+    // Recursive comparison
+    assertThat(actual)
+        .usingRecursiveComparison()
+        .isEqualTo(expected);
+}
+```
+
+**Итого**
+- Создайте класс, наследуя `AbstractAssert`.
+- Реализуйте нужные методы проверки, возвращая `this`.
+- Для глубоких сравнений используйте `usingRecursiveComparison()`
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Fluent API & Chaining</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – как читать цепочки и использовать `then()/and()/or()` + `withFailMessage`
+
+### 1. Как читать цепочку
+```java
+assertThat(value)
+    .isNotNull()          // 1
+    .isInstanceOf(String.class) // 2
+    .startsWith(\"Hi\")     // 3
+    .endsWith(\"!\")        // 4
+    .hasSize(5);          // 5
+```
+
+* **Порядок** – читаем слева направо, как обычный список вызовов методов.
+* **Каждый шаг** возвращает объект‑ассертор того же `subject`, поэтому можно сразу продолжать писать дальше.
+* **Выполнение** – все проверки выполняются последовательно, при первом падении цепочка прерывается и бросается AssertionError.
+
+### 2. `then()`, `and()`, `or()`
+
+| Метод | Что делает | Когда использовать |
+|-------|------------|--------------------|
+| **`and()`** | Добавляет ещё одну проверку к тому же объекту. | Если нужно сделать несколько независимых assertions подряд. |
+| **`or()`** | Позволяет задать альтернативную проверку: цепочка считается пройденной, если *любое* из условий выполнено. | Когда допускается несколько допустимых вариантов (например, порядок элементов в списке). |
+| **`then()`** | Возвращает к исходному объекту после `extracting`, `satisfies` и т.п. | После того как вы «вытащили» часть объекта и сделали проверки, но дальше хотите продолжить проверять сам объект. |
+
+#### Пример
+
+```java
+assertThat(myObj)
+    .hasFieldOrProperty(\"name\")          // 1
+    .extracting(\"age\")                   // 2 – теперь проверяем age
+    .isPositive()                        // 3
+    .then()                              // 4 – возвращаемся к myObj
+    .hasFieldOrProperty(\"address\")       // 5
+    .and()                               // 6 – ещё одна проверка на том же объекте
+    .isNotNull();                        // 7
+```
+
+Альтернатива:
+
+```java
+assertThat(list)
+    .containsExactly(\"a\", \"b\")           // 1
+    .or()                                // 2 – либо 1, либо 3
+    .containsExactly(\"b\", \"a\");          // 3
+```
+
+### 3. `withFailMessage`
+
+* **Назначение** – задаёт собственное сообщение об ошибке для следующего шага проверки.
+* **Синтаксис**
+  ```java
+  assertThat(value)
+      .withFailMessage(\"Custom error: %s\", value)
+      .isEqualTo(expected);
+  ```
+* **Важно** – сообщение применяется только к следующему вызову, а не ко всей цепочке.
+* **Альтернатива** – `overridingErrorMessage()` можно использовать, если нужно заменить сообщение для всей цепочки.
+
+#### Мини‑пример
+
+```java
+assertThat(user.getName())
+    .withFailMessage(\"User name should not be null for user id %d\", user.getId())
+    .isNotNull();
+```
+
+---
+
+### Кратко
+
+| Что | Как читать | Ключевые слова |
+|-----|------------|----------------|
+| **Цепочка** | `assertThat(obj).check1().check2()` | слева → справа |
+| **`and()`** | Добавляет ещё одно условие | `and()` |
+| **`or()`** | Альтернативные условия | `or()` |
+| **`then()`** | Возвращает к исходному объекту | `then()` |
+| **`withFailMessage`** | Устанавливает сообщение об ошибке для следующего шага | `withFailMessage(...)`
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Интеграция с JUnit / TestNG</summary>
     <p style='font-size: 14px'>
 
-Текст
+### Интеграция AssertJ с JUnit / TestNG
+
+| Инструмент | Как подключить | Что делает |
+|------------|----------------|------------|
+| **JUnit 5** | ```java<br>@Test<br>public void testExample() {<br>    assertThat(value).isEqualTo(expected);<br>}<br>```<br>или<br>```java<br>@ExtendWith(AssertJExtension.class)<br>``` | Позволяет использовать `assertThat` без лишних импортов и автоматически подключает AssertJ‑расширения. |
+| **TestNG** | ```java<br>@Test<br>public void testExample() {<br>    assertThat(value).isEqualTo(expected);<br>}<br>``` | Тесты пишутся так же, как в JUnit; AssertJ не требует специальных аннотаций, но можно добавить `@Listeners(AssertJListener.class)` для более продвинутой интеграции. |
+
+**Кратко:**
+
+- **`@Test`** – обычная аннотация JUnit/TestNG, указывающая, что метод является тестом.
+- **`assertThat`** – статический метод из AssertJ, который возвращает объект‑сказуемый для цепочки проверок.
+- **`@ExtendWith(AssertJExtension.class)`** (JUnit 5) – подключает расширения AssertJ, если нужны дополнительные возможности (например, автоматическое закрытие ресурсов).
+
+> **Пример использования в JUnit 5**
+> ```java
+> import static org.assertj.core.api.Assertions.assertThat;
+> import org.junit.jupiter.api.Test;
+> import org.junit.jupiter.api.extension.ExtendWith;
+> import org.assertj.core.api.junit.jupiter.AssertJExtension;
+> 
+> @ExtendWith(AssertJExtension.class)
+> public class ExampleTest {
+>     @Test
+>     void shouldReturnTrue() {
+>         boolean result = someService.isAvailable();
+>         assertThat(result).isTrue();
+>     }
+> }
+> ```
+
+Такой подход делает тесты читаемыми, лаконичными и избавляет от громоздких `assertEquals`, `assertTrue` и т.д.
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Питфоллы и ошибки</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – основные «питфоллы» и как их избежать
+
+| Что может пойти не так | Почему это происходит | Как исправить |
+|------------------------|----------------------|---------------|
+| **`NullPointerException` при `assertThat(null)`** | Если сразу после `assertThat(null)` вы вызываете метод, который **не умеет работать с `null`** (например, `contains()`, `hasSize()`, `isEqualToIgnoringCase()` и т.п.), AssertJ пытается обратиться к полям/методам реального объекта и падает с NPE. | 1. **Проверяйте null‑значения до использования**:<br>`assertThat(actual).isNotNull();`<br>2. Если вы действительно хотите проверить, что объект **равен null**, используйте:<br>`assertThat(actual).isNull();`<br>3. Для коллекций/массивов: `<br>``assertThat(collection).isNull();``<br>или `<br>``assertThat(collection).isNotNull().hasSize(…);`` |
+| **Плохие сообщения в `AssertionError`** | Иногда библиотека генерирует «общие» сообщения, особенно если вы используете кастомные типы или цепочку методов с тем же типом, а не с описанием контекста. | 1. Добавляйте описание:<br>`assertThat(actual).as(\"Описание контекста\").isEqualTo(expected);`<br>2. Перезаписывайте сообщение:<br>`assertThat(actual).overridingErrorMessage(\"Тут конкретное сообщение\").isEqualTo(expected);`<br>3. При работе с коллекциями/массивами используйте `containsExactly(...)`, `containsOnly(...)` – они дают более читаемые сообщения. |
+| **`assertThat(null)` компилируется, но в рантайме бросает `AssertionError` с «плохим» текстом** | Если вы вызываете `assertThat(null).isEqualTo(...)`, AssertJ сообщает «expected actual not to be null», но иногда это не помогает быстро понять, что именно ожидалось. | Используйте `isNull()`/`isNotNull()` сразу после `assertThat`, а не после других проверок. Это делает стек ошибок более понятным. |
+| **`assertj-warnings`** | В проекте иногда включён модуль “warnings” – это предупреждения о том, что AssertJ используется в production‑коде. Они появляются как `@SuppressWarnings(\"AssertJ\")` в IDE/CI. | **Отключить можно двумя способами**:<br>1. **Подключить артефакт с классификатором `assertj-warnings`** (Maven/Gradle).<br>2. **Поставить аннотацию `@SuppressWarnings(\"AssertJ\")` глобально** (не рекомендуется).<br>3. **В Gradle**: `implementation(\"org.assertj:assertj-core:3.24.2\") { classifier = \"assertj-warnings\" }`. <br>4. **В Maven**:<br>```xml\
+<dependency>\
+<groupId>org.assertj</groupId>\
+<artifactId>assertj-core</artifactId>\
+<version>3.24.2</version>\
+<classifier>assertj-warnings</classifier>\
+</dependency>\
+```<br>5. **Если вы используете Spring Boot**: добавьте `spring-boot-starter-test` – он уже подключает `assertj-core` без предупреждений. |
+
+---
+
+### Быстрый чек‑лист
+
+| Шаг | Что проверить |
+|-----|----------------|
+| 1 | **Не вызывайте методы, требующие непустой реальный объект, на `null`.** |
+| 2 | **Всегда добавляйте контекст** (`as(...)`) при проверке сложных структур. |
+| 3 | **Если нужно проверить `null`, используйте `isNull()` сразу после `assertThat`.** |
+| 4 | **Для отключения предупреждений** подключайте `assertj-core` с классификатором `assertj-warnings`. |
+| 5 | **При тестировании исключений** используйте `assertThatNullPointerException().isThrownBy(...)`. |
+
+---
+
+### Мини‑пример
+
+```java
+@Test
+void testNullHandling() {
+    // ❌ Неправильно – вызовет NPE
+    // assertThat(null).contains(\"foo\");
+
+    // ✅ Правильно – сначала проверяем null, потом продолжаем
+    assertThat(null).isNull();                         // проверяем, что null
+    // Если нужно проверить, что коллекция пуста, но может быть null:
+    assertThat((List<String>) null).isNull();          // или .isNotNull().isEmpty()
+}
+
+@Test
+void testErrorMessage() {
+    // ❌ Плохое сообщение
+    // assertThat(\"abc\").isEqualToIgnoringCase(\"ABC\");
+
+    // ✅ Читабельное сообщение
+    assertThat(\"abc\")
+        .as(\"Проверяем регистронезависимое сравнение\")
+        .isEqualToIgnoringCase(\"ABC\");
+}
+```
+
+---
+
+> **Итог:**  
+> *Питфоллы AssertJ чаще всего связаны с неправильным использованием `null` и отсутствием контекста в сообщениях. Добавляйте `isNull()/isNotNull()` и `as(...)`, а предупреждения отключайте через классификатор `assertj-warnings`.*
 </p>
     </details>
     <details style='margin-left: 20px'>
-    <summary style='font-size: 16px'>Пункт</summary>
+    <summary style='font-size: 16px'>Полезные утилиты</summary>
     <p style='font-size: 14px'>
 
-Текст
+## AssertJ – полезные утилиты
+
+| Утилита | Что делает | Короткий пример |
+|---------|------------|-----------------|
+| **`SoftAssertions`** | Позволяет собрать несколько проверок в одном тесте и вывести все ошибки сразу. Это удобно, если нужно проверить множество полей объекта и не останавливать тест после первой ошибки. | ```java<br>SoftAssertions soft = new SoftAssertions();<br>soft.assertThat(user.getName()).isEqualTo(\"Alice\");<br>soft.assertThat(user.getAge()).isGreaterThan(18);<br>soft.assertAll();<br>``` |
+| **`assertThatCode`** | Позволяет утверждать, что блок кода **не** бросает исключение (или бросает конкретное). Работает как комбинация `assertDoesNotThrow` и `assertThrows`. | ```java<br>assertThatCode(() -> service.process(input))<br>    .doesNotThrowAnyException();<br>``` |
+| **`assertThatThrownBy`** | Проверяет, что при выполнении кода выбрасывается **любое** исключение, а потом можно уточнить его тип и свойства. | ```java<br>assertThatThrownBy(() -> service.process(null))<br>    .isInstanceOf(IllegalArgumentException.class)<br>    .hasMessageContaining(\"input must not be null\");<br>``` |
+| **`assertThatExceptionOfType`** | То же, но сразу указывает ожидаемый тип исключения, без необходимости уточнять в цепочке. | ```java<br>assertThatExceptionOfType(IllegalArgumentException.class)<br>    .isThrownBy(() -> service.process(null))<br>    .withMessageContaining(\"input must not be null\");<br>``` |
+
+### Когда использовать что?
+
+| Ситуация | Выбор |
+|----------|-------|
+| Нужно проверить несколько утверждений и получить список всех ошибок | `SoftAssertions` |
+| Проверка, что код **не** бросает исключения | `assertThatCode(...).doesNotThrowAnyException()` |
+| Проверка, что бросается конкретное исключение, но вы хотите проверить и его сообщение | `assertThatThrownBy(...)` |
+| Проверка только типа исключения (можно добавить сообщение позже) | `assertThatExceptionOfType(...)` |
+
+> **Tip** – если вы хотите сразу указать тип и проверить сообщение, `assertThatExceptionOfType` короче и читабельнее, но `assertThatThrownBy` даёт больше гибкости (например, проверка стека, дополнительных свойств и т.п.).
+</p>
+    </details>
+</details>
+
+<details>    
+<summary style='font-size: 20px'><b>TestNG</b></summary>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Что такое TestNG?</summary>
+    <p style='font-size: 14px'>
+
+### TestNG
+
+**TestNG** – это популярный фреймворк для модульного и интеграционного тестирования Java‑приложений.  
+Он вдохновлен JUnit, но добавляет ряд удобных возможностей:
+
+| Что можно делать | Как это реализуется |
+|------------------|---------------------|
+| **Порядок выполнения** | `@BeforeSuite`, `@BeforeTest`, `@BeforeClass`, `@BeforeMethod` и аналогичные аннотации |
+| **Параллельность** | `parallel=\"tests\"`, `parallel=\"classes\"` и др. в `testng.xml` |
+| **Группы тестов** | `@Test(groups = {\"fast\", \"regression\"})` и запуск конкретных групп |
+| **Параметризация** | `@Parameters`, `@DataProvider` |
+| **Управление зависимостями** | `dependsOnMethods`, `dependsOnGroups` |
+| **Отчёты** | HTML, XML, Allure и др. |
+
+#### Как подключить
+
+```xml
+<dependency>
+    <groupId>org.testng</groupId>
+    <artifactId>testng</artifactId>
+    <version>7.7.0</version>
+    <scope>test</scope>
+</dependency>
+```
+
+> **Коротко:** TestNG – это гибкий, расширяемый фреймворк, который позволяет легко организовать порядок, параллельность и группировку тестов, а также интегрировать их в CI/CD пайплайны.
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Основные аннотации</summary>
+    <p style='font-size: 14px'>
+
+## Основные аннотации TestNG
+
+| Аннотация | Когда вызывается | Что делает |
+|-----------|------------------|------------|
+| **@Test** | Перед каждым тестовым методом | Определяет тестовый метод. Можно указать группы, зависимости, параметры, ожидание исключения и т.д. |
+| **@BeforeMethod** | Перед каждым методом, помеченным `@Test` | Подготавливает состояние (например, открывает браузер). |
+| **@AfterMethod** | После каждого метода `@Test` | Очищает состояние (закрывает браузер, удаляет данные). |
+| **@BeforeClass** | Перед первым методом в классе, помеченным `@Test` | Выполняется один раз для всех тестов в классе. |
+| **@AfterClass** | После последнего метода `@Test` в классе | Завершает работу, закрывает ресурсы. |
+| **@BeforeTest** | Перед первым методом в `<test>` (XML) | Подготавливает окружение для группы тестов. |
+| **@AfterTest** | После последнего метода в `<test>` | Очищает окружение. |
+| **@BeforeSuite** | Перед первым `<test>` в `<suite>` | Запускается один раз для всей сборки. |
+| **@AfterSuite** | После последнего `<test>` в `<suite>` | Завершает всю сборку. |
+| **@BeforeGroups** | Перед выполнением групп, указанных в `groups` | Позволяет подготовить данные конкретной группы. |
+| **@AfterGroups** | После выполнения групп | Очищает данные группы. |
+| **@Parameters** | Перед методом `@Test` | Позволяет передавать параметры из XML. |
+| **@Optional** | С `@Parameters` | Указывает значение по умолчанию, если параметр не задан. |
+| **@DataProvider** | Создаёт набор данных | Возвращает `Object[][]`, которое используется для многократного выполнения `@Test`. |
+| **@Factory** | Создаёт объекты тестов | Позволяет динамически генерировать тестовые случаи. |
+
+### Быстрый пример
+
+```java
+public class SampleTest {
+
+    @BeforeSuite
+    public void beforeSuite() {
+        System.out.println(\"Before Suite\");
+    }
+
+    @BeforeClass
+    public void beforeClass() {
+        System.out.println(\"Before Class\");
+    }
+
+    @BeforeMethod
+    public void beforeMethod() {
+        System.out.println(\"Before Method\");
+    }
+
+    @Test(groups = \"smoke\")
+    public void test1() {
+        System.out.println(\"Test 1\");
+    }
+
+    @Test(dependsOnMethods = \"test1\")
+    public void test2() {
+        System.out.println(\"Test 2\");
+    }
+
+    @AfterMethod
+    public void afterMethod() {
+        System.out.println(\"After Method\");
+    }
+
+    @AfterClass
+    public void afterClass() {
+        System.out.println(\"After Class\");
+    }
+
+    @AfterSuite
+    public void afterSuite() {
+        System.out.println(\"After Suite\");
+    }
+}
+```
+
+> **Совет**: используйте `@DataProvider`, если один тест нужно выполнить с разными наборами данных, и `groups`, чтобы запускать только нужные группы (например, `smoke`, `regression`).
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Группы тестов</summary>
+    <p style='font-size: 14px'>
+
+## TestNG – группы тестов
+
+Группы позволяют **организовать** наборы тестов так, чтобы запускать только нужные части.  
+Например: `smoke`, `regression`, `api`, `ui` и т.п.
+
+---
+
+### 1. Как объявить группу
+
+```java
+import org.testng.annotations.Test;
+
+public class LoginTests {
+
+    @Test(groups = {\"smoke\", \"regression\"})
+    public void loginWithValidCredentials() { … }
+
+    @Test(groups = {\"regression\"})
+    public void loginWithInvalidPassword() { … }
+
+    @Test(groups = {\"api\"})
+    public void checkLoginEndpoint() { … }
+}
+```
+
+* `groups` – массив строк, можно указывать несколько групп.
+
+---
+
+### 2. Как запускать только нужные группы
+
+#### a) Через `testng.xml`
+
+```xml
+<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\" >
+<suite name=\"MySuite\">
+    <test name=\"SmokeTests\">
+        <groups>
+            <run>
+                <include name=\"smoke\"/>
+            </run>
+        </groups>
+        <classes>
+            <class name=\"com.example.LoginTests\"/>
+        </classes>
+    </test>
+</suite>
+```
+
+#### b) Через командную строку
+
+```bash
+mvn test -Dsurefire.suiteXmlFiles=testng.xml -Dgroups=smoke
+# или
+java -cp ... org.testng.TestNG -groups smoke,regression testng.xml
+```
+
+#### c) Через аннотации `@BeforeGroups`, `@AfterGroups`
+
+```java
+@BeforeGroups(\"db\")
+public void setUpDatabase() { … }
+
+@AfterGroups(\"db\")
+public void tearDownDatabase() { … }
+```
+
+---
+
+### 3. Зависимости между группами
+
+```java
+@Test(groups = {\"login\"}, dependsOnGroups = {\"setup\"})
+public void testLogin() { … }
+```
+
+Тест `login` выполнится **только после** всех тестов из группы `setup`.
+
+---
+
+### 4. Параллельный запуск групп
+
+В `testng.xml` можно задать параллелизм:
+
+```xml
+<suite name=\"ParallelSuite\" parallel=\"tests\" thread-count=\"2\">
+    <test name=\"Smoke\">
+        <groups>
+            <run>
+                <include name=\"smoke\"/>
+            </run>
+        </groups>
+        …
+    </test>
+    <test name=\"Regression\">
+        <groups>
+            <run>
+                <include name=\"regression\"/>
+            </run>
+        </groups>
+        …
+    </test>
+</suite>
+```
+
+---
+
+### 5. Динамические группы (пользовательский код)
+
+Если нужно присвоить группу в рантайме, реализуйте `ITestNGListener`/`IInvokedMethodListener`:
+
+```java
+public class GroupAssigner implements IInvokedMethodListener {
+    @Override
+    public void beforeInvocation(IInvokedMethod method, ITestResult testResult) {
+        if (someCondition) {
+            testResult.setGroups(new String[]{\"slow\"});
+        }
+    }
+}
+```
+
+Добавьте слушателя в `testng.xml`:
+
+```xml
+<listeners>
+    <listener class-name=\"com.example.GroupAssigner\"/>
+</listeners>
+```
+
+---
+
+## Быстрый чек‑лист
+
+| Что | Как сделать |
+|-----|--------------|
+| **Объявить группы** | `@Test(groups = {\"name\"})` |
+| **Включить группу** | `-Dgroups=name` или `<include>` в XML |
+| **Исключить группу** | `-Dgroups=!name` или `<exclude>` в XML |
+| **Зависимость** | `dependsOnGroups = {\"other\"}` |
+| **Параллельность** | `parallel=\"tests\"` + `thread-count` |
+| **Проверка группы в коде** | `ITestResult.getGroups()` |
+| **Перед/после группы** | `@BeforeGroups`, `@AfterGroups` |
+
+---
+
+### Коротко
+
+1. **Назначьте** тесту одну или несколько групп через `@Test(groups = {...})`.
+2. **Запускайте** нужные группы через `-groups`, `<include>`/`<exclude>` в XML.
+3. **Организуйте** зависимости и параллелизм при необходимости.
+
+Группы делают ваш TestNG‑скрипт гибким и удобным для разных сценариев тестирования.
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Параметры (Parameters)</summary>
+    <p style='font-size: 14px'>
+
+## TestNG – Параметры (Parameters)
+
+Параметры позволяют передавать данные в тесты из внешнего источника (обычно из XML‑файла).  
+Это удобно, когда один и тот же тест нужно запустить с разными входными данными.
+
+---
+
+### 1. Как объявить параметр
+
+```java
+@Test
+@Parameters({\"browser\", \"url\"})
+public void loginTest(String browser, String url) {
+    System.out.println(\"Browser: \" + browser + \", URL: \" + url);
+}
+```
+
+- `@Parameters` – список имён параметров, которые будут переданы в метод.
+- Параметры передаются в том же порядке, что и в XML.
+
+---
+
+### 2. XML‑конфигурация
+
+```xml
+<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">
+<suite name=\"Suite\">
+  <test name=\"Test1\">
+    <parameter name=\"browser\" value=\"chrome\"/>
+    <parameter name=\"url\" value=\"https://example.com\"/>
+    <classes>
+      <class name=\"com.example.LoginTest\"/>
+    </classes>
+  </test>
+</suite>
+```
+
+- `<parameter>` задаёт конкретное значение для теста.
+- Можно задать параметры на уровне `suite`, `test`, `class` – они наследуются по иерархии.
+
+---
+
+### 3. Дополнительно
+
+| Функция | Как использовать |
+|---------|-------------------|
+| **Optional parameters** | `public void test(@Optional(\"default\") String param)` – если параметр не задан, будет использоваться значение по умолчанию. |
+| **DataProvider + Parameters** | Параметры можно комбинировать с `@DataProvider` для более гибкого тестирования. |
+| **Параметры из свойств** | `@Parameters({\"configFile\"})` + `System.getProperty(\"configFile\")` – удобно для внешних конфигураций. |
+
+---
+
+### 4. Быстрый пример
+
+```java
+@Test
+@Parameters({\"env\", \"timeout\"})
+public void checkEnv(String env, int timeout) {
+    System.out.println(\"Env: \" + env + \", Timeout: \" + timeout);
+}
+```
+
+```xml
+<test name=\"EnvTest\">
+  <parameter name=\"env\" value=\"prod\"/>
+  <parameter name=\"timeout\" value=\"30\"/>
+  <classes>
+    <class name=\"com.example.EnvTest\"/>
+  </classes>
+</test>
+```
+
+---
+
+**Итого:**
+- `@Parameters` – аннотация, указывающая имена параметров.
+- Параметры задаются в XML‑файле и передаются в тестовые методы.
+- Если параметр не нужен, можно использовать `@Optional`.
+- Можно комбинировать с `@DataProvider` и другими механизмами TestNG.
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>DataProvider</summary>
+    <p style='font-size: 14px'>
+
+## Что такое `@DataProvider` в TestNG?
+
+`@DataProvider` – это механизм, позволяющий передавать тесту несколько наборов данных.  
+Тест, помеченный `@Test(dataProvider = \"имя\")`, будет выполнен столько раз, сколько строк вернёт `DataProvider`.
+
+---
+
+## Как это выглядит
+
+```java
+public class LoginTest {
+
+    /* 1. DataProvider – метод, который возвращает 2‑мерный массив */
+    @DataProvider(name = \"loginData\")
+    public Object[][] loginData() {
+        return new Object[][]{
+            {\"user1\", \"pass1\"},
+            {\"user2\", \"pass2\"},
+            {\"admin\",  \"root\"}
+        };
+    }
+
+    /* 2. Тест, который получает каждый набор данных */
+    @Test(dataProvider = \"loginData\")
+    public void testLogin(String username, String password) {
+        System.out.printf(\"Trying login: %s / %s%n\", username, password);
+        // … здесь логика входа, проверки и т.д.
+    }
+}
+```
+
+### Что происходит?
+
+| Шаг | Что делает | Результат |
+|-----|------------|-----------|
+| 1 | `loginData()` возвращает массив `Object[][]` | 3 строки → 3 набора данных |
+| 2 | `testLogin()` вызывается 3 раза | Каждый раз получает свой набор `username/password` |
+
+---
+
+## Практические советы
+
+| Что | Как сделать |
+|-----|-------------|
+| **Параметризовать тесты по разным источникам** | Можно возвращать данные из CSV, Excel, базы данных – просто измените логику в `DataProvider`. |
+| **Проверять ошибки** | Если `DataProvider` бросит исключение, TestNG пометит тест как *failed*. |
+| **Параллельный запуск** | Аннотация `@DataProvider(parallel = true)` позволяет выполнять наборы данных параллельно. |
+| **Передавать объекты** | `Object[][]` может содержать любые типы: `String`, `int`, даже пользовательские POJO. |
+
+---
+
+## Минимальный пример
+
+```java
+public class Example {
+    @DataProvider(name = \"numbers\")
+    public Object[][] numbers() {
+        return new Object[][]{{1}, {2}, {3}};
+    }
+
+    @Test(dataProvider = \"numbers\")
+    public void testNumber(int n) {
+        assert n > 0;
+    }
+}
+```
+
+Тест `testNumber` выполнится 3 раза с аргументами 1, 2 и 3.
+
+---
+
+## Итог
+
+- `@DataProvider` = источник данных для тестов.
+- Позволяет **повторять** один тест с разными входными данными.
+- Синтаксис прост: метод возвращает `Object[][]`, а тест указывает `dataProvider = \"имя\"`.
+- Полезно для **параметризации** и **тестирования** различных сценариев без дублирования кода.
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Зависимости (dependsOnMethods / dependsOnGroups)</summary>
+    <p style='font-size: 14px'>
+
+## TestNG – зависимости между тестами
+
+В TestNG есть два механизма, позволяющих задать **зависимости**:
+* `dependsOnMethods`
+* `dependsOnGroups`
+
+Они гарантируют, что тесты будут выполнены только после тех, от которых они зависят.  
+Если зависимый тест не прошёл, то все тесты, которые на него зависят, будут пропущены (skip).
+
+> ⚠️ **Важно** – не используйте зависимости как способ упорядочить простые тесты.  
+> Лучше использовать `@Before/After`, `@DataProvider` и `priority`.  
+> Зависимости полезны, когда тесты действительно имеют логическую взаимосвязь (логин → просмотр страницы, и т.д.).
+
+---
+
+## 1. `dependsOnMethods`
+
+```java
+public class LoginTests {
+
+    @Test
+    public void login() {
+        // логин
+    }
+
+    @Test(dependsOnMethods = \"login\")
+    public void openDashboard() {
+        // открываем дашборд после успешного логина
+    }
+}
+```
+
+### Как это работает
+| Тест | Зависит от | Что происходит при неудаче |
+|------|------------|---------------------------|
+| `login` | — | выполняется |
+| `openDashboard` | `login` | если `login` **провалился**, `openDashboard` помечается как **skipped** |
+
+### Ключевые моменты
+- В `dependsOnMethods` указывают **имя метода** (или массив имён) в том же классе, либо в другом, если указать полное имя `package.Class.method`.
+- Если зависимый метод находится в другом классе, TestNG сначала запускает его, а потом – тест, который зависит.
+- Цепочки зависимостей возможны: `A → B → C`.  
+  Если `A` падает → `B` и `C` пропустятся.
+- **Проверка**: в отчёте видны статус `FAILED`/`SKIPPED`.
+
+---
+
+## 2. `dependsOnGroups`
+
+```java
+public class GroupedTests {
+
+    @Test(groups = {\"auth\"})
+    public void login() { /* … */ }
+
+    @Test(groups = {\"auth\"})
+    public void logout() { /* … */ }
+
+    @Test(dependsOnGroups = {\"auth\"})
+    public void openDashboard() { /* … */ }
+}
+```
+
+### Как это работает
+- `openDashboard` будет запущен **только после того, как все тесты из группы `auth` завершились** (успехом или неудачей).
+- Если хотя бы один тест из группы `auth` **провалился**, `openDashboard` будет пропущен.
+
+### Комбинирование
+```java
+@Test(dependsOnGroups = {\"auth\"}, dependsOnMethods = \"setup\")
+public void openDashboard() { /* … */ }
+```
+
+> ⚡️ Убедитесь, что группы объявлены корректно (`groups = {\"name\"}`).
+
+---
+
+## 3. `alwaysRun`
+
+Иногда нужно, чтобы тест **выполнялся** даже если зависимый тест не прошёл (например, тест очистки).  
+Добавьте атрибут `alwaysRun = true`:
+
+```java
+@Test(dependsOnMethods = \"login\", alwaysRun = true)
+public void cleanup() { /* … */ }
+```
+
+---
+
+## 4. Ограничения и предупреждения
+
+| Ограничение | Что это значит |
+|-------------|----------------|
+| **Циклы** | `A` зависит от `B`, а `B` – от `A`. Это приводит к ошибке при запуске. |
+| **Порядок внутри группы** | TestNG не гарантирует порядок выполнения тестов внутри одной группы, если не указаны зависимости. |
+| **Масштаб** | В больших проектах чрезмерное использование зависимостей усложняет поддержку и может привести к «зависанию» тестов. |
+| **Отладка** | При пропуске тестов важно проверять отчёт, чтобы понять, почему они пропущены. |
+
+---
+
+## 5. Лучшие практики
+
+| Практика | Почему |
+|----------|--------|
+| **Минимум зависимостей** | Старайтесь держать тесты независимыми. |
+| **Используйте `@BeforeClass`/`@BeforeMethod` для подготовки** | Это чистый способ установить состояние, а не «зависимость» между тестами. |
+| **Группируйте логически связанные тесты** | `dependsOnGroups` удобно, когда нужно, чтобы все тесты из группы завершились перед запуском другого. |
+| **Проверяйте отчёты** | В случае пропусков сразу узнавайте, какие тесты не запустились и почему. |
+| **Не используйте зависимости для простого упорядочивания** | Для этого лучше использовать `priority` или `@Test` без зависимостей. |
+
+---
+
+## 6. Полный пример
+
+```java
+public class AllTests {
+
+    @Test(groups = {\"setup\"})
+    public void initBrowser() { /* открыть браузер */ }
+
+    @Test(dependsOnGroups = {\"setup\"})
+    public void login() { /* логин */ }
+
+    @Test(dependsOnMethods = \"login\")
+    public void verifyDashboard() { /* проверяем дашборд */ }
+
+    @Test(dependsOnMethods = {\"login\"}, alwaysRun = true)
+    public void logout() { /* выход из системы */ }
+}
+```
+
+**Итог**:
+- `initBrowser` → `login` → `verifyDashboard`
+- `logout` всегда выполняется, даже если `login` провалился.
+
+---
+
+### Итоговое резюме
+
+| Что | Как указать | Что происходит при неудаче |
+|-----|-------------|---------------------------|
+| Зависимость от метода | `dependsOnMethods = \"methodName\"` | Тест пропускается |
+| Зависимость от группы | `dependsOnGroups = \"groupName\"` | Тест пропускается |
+| Обязательный запуск | `alwaysRun = true` | Тест выполняется независимо от результата зависимостей |
+
+Используйте эти механизмы, когда действительно есть логическая связь между тестами. В остальных случаях – придерживайтесь простых `@Before/After` и `@DataProvider`.
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Параллельный запуск</summary>
+    <p style='font-size: 14px'>
+
+## TestNG – параллельный запуск тестов
+
+### 1. Почему это нужно
+- **Скорость** – несколько тестов выполняются одновременно, а не последовательно.
+- **Параллелизм** – можно тестировать разные сценарии (параллельно разные браузеры, API‑эндпоинты и т.д.).
+
+> **Важно**: все тесты должны быть *thread‑safe*. Не делайте общих статических полей, используйте `ThreadLocal` или создавайте объекты в `@BeforeMethod`.
+
+---
+
+### 2. Как включить параллелизм
+
+| Уровень | Что параллелится | Где ставим атрибут `parallel` |
+|---------|------------------|------------------------------|
+| **методы** | Каждый метод `@Test` в отдельном потоке | `<suite>`, `<test>`, `<class>` |
+| **классы** | Каждый класс тестов в отдельном потоке | `<suite>`, `<test>` |
+| **тесты** | Каждый `<test>` из XML‑файла в отдельном потоке | `<suite>` |
+| **экземпляры** | Каждый объект класса в отдельном потоке (через `threadPoolSize` в `@Test`) | `@Test` |
+
+```xml
+<!-- testng.xml -->
+<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\" >
+<suite name=\"ParallelSuite\"
+       parallel=\"methods\"        <!-- можно заменить на classes/tests/instances -->
+       thread-count=\"8\">        <!-- сколько потоков одновременно -->
+  
+  <test name=\"WebTests\">
+    <classes>
+      <class name=\"com.example.LoginTest\"/>
+      <class name=\"com.example.PaymentTest\"/>
+    </classes>
+  </test>
+</suite>
+```
+
+---
+
+### 3. Параллельные `@DataProvider`
+
+```java
+@DataProvider(name = \"users\", parallel = true)
+public Object[][] users() {
+    return new Object[][] { {\"user1\", \"pass1\"}, {\"user2\", \"pass2\"} };
+}
+
+@Test(dataProvider = \"users\")
+public void loginTest(String user, String pass) {
+    // …
+}
+```
+
+> **Tip**: если `parallel=true`, TestNG создаст отдельный поток для каждой комбинации данных.
+
+---
+
+### 4. Параллельные вызовы в самих тестах
+
+```java
+@Test(threadPoolSize = 5, invocationCount = 5)
+public void concurrentTask() {
+    // код, который будет выполнен 5 раз параллельно
+}
+```
+
+---
+
+### 5. Параллельный запуск через Maven Surefire
+
+```xml
+<plugin>
+  <artifactId>maven-surefire-plugin</artifactId>
+  <version>3.0.0-M9</version>
+  <configuration>
+    <parallel>methods</parallel>          <!-- или classes/tests -->
+    <threadCount>4</threadCount>
+    <forkCount>1</forkCount>             <!-- сколько JVM запустить -->
+  </configuration>
+</plugin>
+```
+
+Запуск: `mvn test -Dsurefire.threadCount=4 -Dsurefire.parallel=methods`
+
+---
+
+### 6. Что проверить после включения параллелизма
+
+| Проверка | Что проверить |
+|----------|---------------|
+| **Потоки** | `Thread.currentThread().getName()` в логах |
+| **Потокобезопасность** | Нет гонок, `ConcurrentModificationException` |
+| **Ресурсы** | Не используйте один и тот же `WebDriver` в нескольких потоках |
+| **Логи** | Логи могут перемешиваться – добавьте идентификатор теста/потока |
+
+---
+
+### 7. Частые ошибки
+
+| Ошибка | Причина | Как исправить |
+|--------|---------|---------------|
+| `java.lang.NoSuchMethodError` | Параллельный запуск в разных JVM, не совместимая библиотека | Обновить зависимости |
+| `ConcurrentModificationException` | Мутируемый объект используется в нескольких потоках | Сделать копию или использовать `CopyOnWriteArrayList` |
+| `NullPointerException` в `@BeforeMethod` | Общий объект не инициализирован | Инициализировать в `@BeforeMethod` |
+
+---
+
+### 8. Итог
+
+- Укажите `parallel=\"...\"` в `testng.xml` или `@Test`.
+- Настройте `thread-count` (или `threadPoolSize`).
+- Убедитесь, что тесты thread‑safe.
+- Используйте Maven Surefire для CI/CD.
+
+Готово! Теперь ваши тесты будут запускаться параллельно, экономя время и ускоряя цикл поставки.
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Listeners</summary>
+    <p style='font-size: 14px'>
+
+## Что такое Listeners в TestNG
+
+Listeners – это интерфейсы, которые позволяют “подписаться” на события жизненного цикла тестов (или тест‑сайтов) и выполнять код до/после них.  
+Вы можете использовать их, чтобы:
+
+| Событие | Что можно сделать | Пример |
+|---------|-------------------|--------|
+| **Запуск/завершение теста** | логировать, собирать screenshots, генерировать отчёты | `ITestListener` (onTestStart/onTestSuccess/onTestFailure/onTestSkipped/onTestFailedButWithinSuccessPercentage/onTestFailedWithTimeout)` |
+| **Запуск/завершение тест‑сайта** | инициализировать/закрывать браузер, подключать базу | `ISuiteListener` (onStart/onFinish)` |
+| **Изменение аннотаций** | динамически менять параметры тестов | `IAnnotationTransformer` |
+| **Переопределение поведения** | изменить порядок выполнения, фильтровать тесты | `IInvokedMethodListener` |
+
+---
+
+## Как подключить Listener
+
+### 1. Через XML‑файл
+
+```xml
+<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\" >
+<suite name=\"Suite\">
+    <listeners>
+        <listener class-name=\"com.example.listeners.MyTestListener\"/>
+    </listeners>
+
+    <test name=\"WebTests\">
+        <classes>
+            <class name=\"com.example.tests.LoginTest\"/>
+        </classes>
+    </test>
+</suite>
+```
+
+### 2. Через аннотацию `@Listeners`
+
+```java
+import org.testng.annotations.Listeners;
+
+@Listeners(com.example.listeners.MyTestListener.class)
+public class LoginTest {
+    @Test
+    public void shouldLogin() { /* ... */ }
+}
+```
+
+### 3. Через программный API
+
+```java
+TestNG testng = new TestNG();
+testng.setTestClasses(new Class[]{LoginTest.class});
+testng.addListener(new MyTestListener());
+testng.run();
+```
+
+---
+
+## Пример простого `ITestListener`
+
+```java
+import org.testng.ITestContext;
+import org.testng.ITestListener;
+import org.testng.ITestResult;
+
+public class MyTestListener implements ITestListener {
+
+    @Override
+    public void onTestStart(ITestResult result) {
+        System.out.println(\"START: \" + result.getName());
+    }
+
+    @Override
+    public void onTestSuccess(ITestResult result) {
+        System.out.println(\"SUCCESS: \" + result.getName());
+    }
+
+    @Override
+    public void onTestFailure(ITestResult result) {
+        System.out.println(\"FAILURE: \" + result.getName());
+        // пример: сделать скриншот
+        // ScreenshotUtil.takeScreenshot(result.getName());
+    }
+
+    @Override
+    public void onTestSkipped(ITestResult result) {
+        System.out.println(\"SKIPPED: \" + result.getName());
+    }
+
+    @Override
+    public void onTestFailedButWithinSuccessPercentage(ITestResult result) { }
+
+    @Override
+    public void onStart(ITestContext context) { }
+
+    @Override
+    public void onFinish(ITestContext context) { }
+}
+```
+
+---
+
+## Полезные практики
+
+1. **Отчёты** – в `onTestFailure` можно собрать информацию о стеке, ответе сервера и т.п.
+2. **Screenshots** – в `onTestFailure` автоматически сохранять скриншот браузера.
+3. **Ресурсы** – в `onStart`/`onFinish` открывать/закрывать БД, WebDriver, и т.д.
+4. **Параметризация** – в `IAnnotationTransformer` менять параметры аннотаций (например, `@Test(invocationCount=5)` в зависимости от окружения).
+
+---
+
+## Быстрый чек‑лист
+
+- [ ] Определил, какие события нужны
+- [ ] Реализовал нужный интерфейс(ы)
+- [ ] Подключил Listener (XML, аннотация или API)
+- [ ] Добавил логирование/снимки/отчёты по необходимости
+- [ ] Проверил, что Listener не мешает параллельному запуску (если используется)
+
+Если понадобится конкретный пример (например, интеграция с Allure, ExtentReports, или Selenium screenshots), дайте знать!
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Retry Analyzer</summary>
+    <p style='font-size: 14px'>
+
+## TestNG – Retry Analyzer
+
+### Что это?
+
+`RetryAnalyzer` – это механизм TestNG, который позволяет автоматически **повторить выполнение** теста, если он провалился.  
+Он полезен, когда тесты иногда падают из‑за нестабильности сети, таймаутов, внешних сервисов и т.п.
+
+---
+
+### Как работает
+
+1. **Интерфейс**
+   ```java
+   public interface IRetryAnalyzer {
+       boolean retry(ITestResult result);
+   }
+   ```
+   `retry()` вызывается после каждого падения теста.  
+   Если возвращает `true`, TestNG повторяет тест; иначе – считается окончательно проваленным.
+
+2. **Счётчик**  
+   Часто реализуется так, чтобы не пытаться бесконечно, а ограничивать количество попыток.
+
+3. **Назначение**
+    - По‑прямому: `@Test(retryAnalyzer = MyRetryAnalyzer.class)`
+    - Через `ITestListener` / `IAnnotationTransformer`
+    - В `testng.xml` (через `<listener>`)
+
+---
+
+### Минимальный пример
+
+```java
+import org.testng.ITestResult;
+import org.testng.annotations.Test;
+
+public class RetryDemo {
+
+    /** Максимальное число попыток */
+    private static final int MAX_RETRY = 3;
+
+    /** Счётчик попыток */
+    private int retryCount = 0;
+
+    @Test(retryAnalyzer = RetryDemo.RetryAnalyzer.class)
+    public void flakyTest() {
+        System.out.println(\"Attempt \" + (retryCount + 1));
+        // Случайный сбой
+        if (Math.random() < 0.7) {
+            throw new RuntimeException(\"Oops!\");
+        }
+    }
+
+    /** Внутренний класс‑анализатор */
+    public class RetryAnalyzer implements IRetryAnalyzer {
+        @Override
+        public boolean retry(ITestResult result) {
+            retryCount++;
+            return retryCount < MAX_RETRY;
+        }
+    }
+}
+```
+
+**Что происходит?**
+
+1. Тест падает → `retry()` вызывается.
+2. Если `retryCount < MAX_RETRY`, TestNG запускает тест заново.
+3. После 3‑й попытки тест считается проваленным.
+
+---
+
+### Быстрый чек‑лист
+
+| Шаг | Что сделать | Пример |
+|-----|-------------|--------|
+| 1 | Создать класс, реализующий `IRetryAnalyzer` | `public class MyRetry implements IRetryAnalyzer { … }` |
+| 2 | Внутри `retry()` хранить/считать счётчик попыток | `if (++count < 5) return true;` |
+| 3 | Привязать к тесту | `@Test(retryAnalyzer = MyRetry.class)` |
+| 4 | (Опционально) добавить в `testng.xml` listener, если хотите, чтобы все тесты использовали один анализатор. | `<listener class-name=\"com.example.MyRetry\"/>` |
+
+---
+
+### Полезные нюансы
+
+| Задача | Как сделать |
+|--------|-------------|
+| **Сброс счётчика для каждого теста** | Инициализировать `retryCount` в конструкторе анализатора или в `@BeforeMethod`. |
+| **Логировать попытки** | В `retry()` выводить `System.out.println(\"Retry \" + retryCount);` |
+| **Учитывать тип ошибки** | `if (result.getThrowable() instanceof TimeoutException) { … }` |
+| **Глобальный анализатор** | Создать класс, реализующий `IAnnotationTransformer`, и в нём менять `retryAnalyzer` для всех тестов. |
+
+---
+
+### Итог
+
+- **Retry Analyzer** – простой способ повысить надёжность flaky‑тестов.
+- Нужно только реализовать `IRetryAnalyzer`, задать логику повторов, и указать его в аннотации `@Test`.
+- По умолчанию TestNG не делает повторов, поэтому при нестабильных тестах стоит добавить такой механизм.
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Soft Assertions</summary>
+    <p style='font-size: 14px'>
+
+## Что такое Soft Assertions в TestNG?
+
+| Hard (твердая) assertion | Soft (мягкая) assertion |
+|--------------------------|--------------------------|
+| **Останавливает** тест, как только она падает. | **Продолжает** выполнение кода, собирая все ошибки. |
+| Если одна проверка не пройдена – дальнейшие шаги не выполняются. | Можно проверить несколько условий в одном тесте и увидеть все неудачи сразу. |
+| Используется, когда дальнейшие действия после ошибки бессмысленны. | Полезна в UI‑тестах, где хочется увидеть полный отчёт о всех несоответствиях. |
+
+---
+
+## Как использовать SoftAssert
+
+```java
+import org.testng.annotations.Test;
+import org.testng.asserts.SoftAssert;
+
+public class SoftAssertExample {
+
+    @Test
+    public void testMultipleConditions() {
+        SoftAssert soft = new SoftAssert();
+
+        // 1. Проверяем заголовок
+        String title = getPageTitle();
+        soft.assertEquals(title, \"Expected Title\", \"Title mismatch\");
+
+        // 2. Проверяем наличие элемента
+        boolean isButtonDisplayed = isElementDisplayed(\"loginButton\");
+        soft.assertTrue(isButtonDisplayed, \"Login button not displayed\");
+
+        // 3. Проверяем текст кнопки
+        String buttonText = getElementText(\"loginButton\");
+        soft.assertEquals(buttonText, \"Login\", \"Button text incorrect\");
+
+        // **Важно** – вызываем один раз в конце:
+        soft.assertAll();   // здесь TestNG бросит все собранные ошибки
+    }
+
+    // Моки для примера
+    private String getPageTitle() { return \"Wrong Title\"; }
+    private boolean isElementDisplayed(String id) { return false; }
+    private String getElementText(String id) { return \"Sign In\"; }
+}
+```
+
+### Что происходит?
+
+1. **Создаём объект `SoftAssert`.**  
+   Он хранит все ошибки, но не бросает их сразу.
+
+2. **Вызываем методы `assert*` (assertEquals, assertTrue и т.п.).**  
+   Ошибка сохраняется в объекте, тест продолжает выполняться.
+
+3. **В конце теста вызываем `soft.assertAll();`**  
+   Если в ходе теста были ошибки – они все будут выброшены как один `AssertionError`.  
+   Если ошибок нет – тест считается пройденным.
+
+---
+
+## Когда использовать Soft Assertions
+
+| Сценарий | Почему Soft лучше |
+|----------|-------------------|
+| Проверка UI‑компонентов, где нужно знать **все** несоответствия | Позволяет увидеть сразу несколько ошибок вместо того, чтобы исправлять одну за одной |
+| Тесты с множеством **параллельных условий** (например, проверка таблицы, где каждая строка должна удовлетворять нескольким свойствам) | Сохраняет время и усилия при отладке |
+| Если последующие шаги **не зависят** от результатов предыдущих проверок | Позволяет выполнять все проверки, даже если часть уже провалилась |
+
+---
+
+## Частые ошибки и как их избежать
+
+| Ошибка | Как исправить |
+|--------|---------------|
+| Не вызывается `soft.assertAll();` | Убедитесь, что вызов находится в конце теста или в `@AfterMethod`. |
+| Ошибка в `assertAll()` не видна в отчёте | Убедитесь, что TestNG настроен на вывод SoftAssert (обычно по умолчанию). |
+| Перепутали `assertAll()` с `assertAll` из AssertJ | В TestNG это `soft.assertAll();` – не забывайте точку с запятой. |
+
+---
+
+## Итог
+
+Soft Assertions в TestNG позволяют собрать **все** проблемы в одном тесте и получить полный отчёт об ошибках. Это особенно полезно в UI‑тестах и сложных интеграционных сценариях. Просто создайте `SoftAssert`, используйте его методы, а в конце вызовите `assertAll()` – и всё готово!
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Отчёты</summary>
+    <p style='font-size: 14px'>
+
+## TestNG — как генерировать отчёты
+
+| Что | Как сделать | Что видим |
+|-----|-------------|-----------|
+| **Стандартный HTML‑отчёт** | После запуска тестов в каталоге `test-output` появится `index.html` и `testng-results.xml`. | Клики‑по‑тестам, статус, время, ошибки, скриншоты (если добавлены). |
+| **XML‑отчёт** | `testng-results.xml` – это базовый XML, который можно парсить или передавать в CI. | Структура: `<suite> → <test> → <class> → <test-method>` |
+| **JUnit‑совместимый XML** | Добавьте `listener` `org.testng.reporters.JUnitXMLReporter`. | Файл `TEST-*.xml`, пригодный для Jenkins/JUnit. |
+| **Пользовательский отчёт** | Реализуйте `IReporter` или `ITestListener`. | Любой формат: CSV, Markdown, PDF, веб‑страница. |
+| **Allure / ExtentReports** | Подключите стороннюю библиотеку и в `@AfterMethod` передайте статус. | Красивый UI, графики, чек‑пойнты, вложения. |
+
+---
+
+### 1. Как TestNG создаёт стандартный отчёт
+
+```text
+project/
+ ├─ src/test/java/…            # тесты
+ └─ test-output/
+     ├─ index.html
+     └─ testng-results.xml
+```
+
+* `index.html` – интерактивный отчёт, открывается в браузере.
+* `testng-results.xml` – простой XML, содержащий все данные о выполнении.
+
+---
+
+### 2. Настройка TestNG для генерации отчётов
+
+#### 2.1 `testng.xml`
+
+```xml
+<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">
+<suite name=\"MySuite\" parallel=\"tests\" thread-count=\"4\">
+    <listeners>
+        <!-- JUnit‑совместимый отчёт -->
+        <listener class-name=\"org.testng.reporters.JUnitXMLReporter\"/>
+        <!-- Пользовательский отчёт -->
+        <listener class-name=\"com.mycompany.report.CustomReporter\"/>
+    </listeners>
+
+    <test name=\"LoginTests\">
+        <classes>
+            <class name=\"com.mycompany.tests.LoginTest\"/>
+        </classes>
+    </test>
+</suite>
+```
+
+#### 2.2 Maven Surefire Plugin
+
+```xml
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <version>3.0.0-M7</version>
+    <configuration>
+        <suiteXmlFiles>
+            <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
+        </suiteXmlFiles>
+    </configuration>
+</plugin>
+```
+
+> **Tip:** `mvn test -Dsurefire.printSummary=true` — печатает резюме в консоль.
+
+---
+
+### 3. Создание пользовательского отчёта
+
+```java
+public class CustomReporter implements IReporter {
+    @Override
+    public void generateReport(List<XmlSuite> xmlSuites,
+                               List<ISuite> suites,
+                               String outputDirectory) {
+        // Пример: создаём CSV
+        try (PrintWriter pw = new PrintWriter(
+                Paths.get(outputDirectory, \"custom-report.csv\").toFile())) {
+            pw.println(\"Suite,Test,Class,Method,Status,Duration(ms)\");
+            for (ISuite suite : suites) {
+                for (ISuiteResult sr : suite.getResults().values()) {
+                    ITestContext ctx = sr.getTestContext();
+                    for (ITestNGMethod method : ctx.getAllTestMethods()) {
+                        String status = method.isSuccess() ? \"PASS\" : \"FAIL\";
+                        pw.printf(\"%s,%s,%s,%s,%s,%d%n\",
+                                suite.getName(),
+                                ctx.getName(),
+                                method.getTestClass().getName(),
+                                method.getMethodName(),
+                                status,
+                                method.getStartMillis() - method.getFinishMillis());
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+* Добавьте класс в `<listeners>` в `testng.xml`.
+* Отчёт будет лежать в `test-output/custom-report.csv`.
+
+---
+
+### 4. Использование **Allure**
+
+1. **Добавьте зависимости** (Maven):
+
+```xml
+<dependency>
+    <groupId>io.qameta.allure</groupId>
+    <artifactId>allure-testng</artifactId>
+    <version>2.28.0</version>
+</dependency>
+```
+
+2. **Запускайте тесты** с `allure-maven` плагином:
+
+```xml
+<plugin>
+    <groupId>io.qameta.allure</groupId>
+    <artifactId>allure-maven</artifactId>
+    <version>2.10.0</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>report</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+3. **Запустите**:
+
+```bash
+mvn clean test
+mvn allure:serve
+```
+
+Allure покажет графики, таблицы, вложения, шаги и т.д.
+
+---
+
+### 5. Использование **ExtentReports**
+
+```java
+ExtentReports extent = new ExtentReports();
+ExtentSparkReporter spark = new ExtentSparkReporter(\"extent.html\");
+extent.attachReporter(spark);
+
+@Test
+public void sample() {
+    ExtentTest test = extent.createTest(\"Sample Test\");
+    try {
+        // … тестовый код …
+        test.pass(\"Успешно\");
+    } catch (Exception e) {
+        test.fail(e);
+    }
+}
+
+@AfterSuite
+public void tearDown() {
+    extent.flush();
+}
+```
+
+* `extent.html` откроется в браузере и будет содержать графики, скриншоты, лог.
+
+---
+
+### 6. Интеграция с Jenkins
+
+| Метод | Как настроить |
+|-------|---------------|
+| **JUnit** | В `post-build actions` → `Publish JUnit test result report` укажите `**/TEST-*.xml`. |
+| **Allure** | Плагин `Allure Jenkins plugin`. В `post-build actions` → `Allure report`. |
+| **ExtentReports** | Просто скопируйте `extent.html` в артефакты, а затем используйте `Publish HTML Reports`. |
+
+---
+
+### 7. Краткие советы
+
+| Что делать | Как |
+|------------|-----|
+| **Проверить статус теста** | `Reporter.log(\"message\", true);` – выводит в консоль и в отчёт. |
+| **Скриншот при падении** | В `@AfterMethod` проверяйте `ITestResult.isSuccess()` и сохраняйте скриншот. |
+| **Параллельный запуск** | В `testng.xml`: `<suite parallel=\"tests\" thread-count=\"4\">`. |
+| **Фильтрация групп** | `@Test(groups = {\"regression\"})`. В `testng.xml` можно включать/выключать группы. |
+
+---
+
+#### Итог
+
+* **Стандартные отчёты** (`index.html`, `testng-results.xml`) генерируются автоматически.
+* Для более гибких отчётов используйте **listeners** (`IReporter`, `ITestListener`).
+* **Allure** и **ExtentReports** дают красивый UI и расширенные возможности.
+* Интеграция с Maven/Jenkins проста – просто настройте плагины/пост‑билд‑шаги.
+
+Надеюсь, это поможет быстро настроить и понять отчёты в TestNG!
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Конфигурация через XML</summary>
+    <p style='font-size: 14px'>
+
+## TestNG – конфигурация через XML
+
+TestNG позволяет описывать, какие тесты запускать и как, в **XML‑файле** (`testng.xml`).  
+Это удобный способ собрать несколько тестов, задать параметры, включить/выключить группы, настроить параллельный запуск и т.д.
+
+### Структура XML
+
+```xml
+<!DOCTYPE suite SYSTEM \"https://testng.org/testng-1.0.dtd\">
+<suite name=\"MySuite\" parallel=\"tests\" thread-count=\"4\">
+  
+  <!-- Параметры, доступные всем тестам -->
+  <parameter name=\"env\" value=\"staging\"/>
+
+  <!-- Тест 1 -->
+  <test name=\"LoginTests\">
+    <!-- Параметры конкретного теста -->
+    <parameter name=\"browser\" value=\"chrome\"/>
+    
+    <groups>
+      <run>
+        <include name=\"smoke\"/>
+        <exclude name=\"regression\"/>
+      </run>
+    </groups>
+
+    <classes>
+      <class name=\"com.example.tests.LoginTest\"/>
+      <class name=\"com.example.tests.ForgotPasswordTest\"/>
+    </classes>
+  </test>
+
+  <!-- Тест 2 -->
+  <test name=\"CheckoutTests\">
+    <classes>
+      <class name=\"com.example.tests.CartTest\"/>
+      <class name=\"com.example.tests.PaymentTest\"/>
+    </classes>
+  </test>
+
+</suite>
+```
+
+| Элемент | Что делает |
+|---------|------------|
+| `<suite>` | Корневой узел; задаёт имя набора, параллельность (`parallel=\"tests|classes|methods\"`), `thread-count` и т.д. |
+| `<parameter>` | Параметры, которые можно получить в тестах через аннотацию `@Parameters`. |
+| `<test>` | Группа тестовых классов. Можно задать свои параметры и группы. |
+| `<groups>` | Включаем/выключаем группы тестов (`include`, `exclude`). |
+| `<classes>` | Список Java‑классов, которые будут запущены. |
+| `<class>` | Полное имя класса. |
+
+### Как запустить
+
+```bash
+# Через Maven
+mvn test -Dsurefire.suiteXmlFiles=src/test/resources/testng.xml
+
+# Через Gradle
+./gradlew test --tests * --info
+# (Gradle автоматически ищет testng.xml в ресурсах)
+```
+
+### Полезные атрибуты
+
+| Атрибут | Значение | Что делает |
+|---------|----------|------------|
+| `parallel` | `tests`, `classes`, `methods` | Параллельный запуск на уровне тестов, классов или методов. |
+| `thread-count` | число | Количество потоков. |
+| `verbose` | `0-5` | Уровень логирования. |
+| `preserve-order` | `true/false` | Сохранять порядок запуска тестов. |
+
+### Пример использования параметров
+
+```java
+public class LoginTest {
+  @Parameters({\"env\", \"browser\"})
+  @Test
+  public void testLogin(String env, String browser) {
+    System.out.println(\"Env: \" + env + \", Browser: \" + browser);
+    // ...
+  }
+}
+```
+
+### Итоги
+
+1. **`testng.xml`** – главный способ конфигурировать TestNG.
+2. В нём описываются **suite → test → class → method**.
+3. Можно задавать **параметры**, **группы**, **параллельность** и многое другое.
+4. Запуск осуществляется через Maven/Gradle, IDE или командной строкой.
+
+Надеюсь, это поможет быстро настроить тесты и продемонстрировать знание TestNG на собеседовании!
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Интеграция с IDE</summary>
+    <p style='font-size: 14px'>
+
+## TestNG | Интеграция с IDE
+
+### 1. Что это?
+
+TestNG – это фреймворк для написания и запуска тестов на Java.  
+Интеграция с IDE позволяет:
+
+* запускать тесты прямо из IDE (IntelliJ IDEA, Eclipse и др.)
+* видеть результаты в виде графика/таблицы
+* использовать отладку, профайлер и другие инструменты IDE
+
+---
+
+### 2. Как подключить TestNG в разных IDE
+
+| IDE | Как добавить TestNG |
+|-----|---------------------|
+| **IntelliJ IDEA** | 1. **File → Settings → Build, Execution, Deployment → Build Tools → Maven** (или Gradle) – добавьте зависимость `org.testng:testng:7.7.1`.<br>2. **или**: *View → Tool Windows → Maven → Add* → `org.testng:testng`.<br>3. После синхронизации появится пункт *Run/Debug* → *TestNG* для любого класса. |
+| **Eclipse** | 1. **Help → Eclipse Marketplace** → найдите *TestNG* и установите.<br>2. После перезапуска: *Right‑click → Run As → TestNG JUnit Test* (или *TestNG Test*).<br>3. Если используете Maven/Gradle – просто добавьте зависимость как в IntelliJ. |
+| **NetBeans** | 1. В *Project Properties → Libraries* добавьте JAR `testng-7.7.1.jar`.<br>2. Создайте *Run Configuration* → *TestNG* или просто запустите через *Run → Test*. |
+
+> **Tip** – если проект управляется Maven/Gradle, IDE автоматически распознаёт TestNG как зависимость и добавит нужный runner.
+
+---
+
+### 3. Как запускать тесты
+
+| Способ | Что делаем |
+|--------|------------|
+| **Run Config** | В IntelliJ/Eclipse выберите класс/метод → *Run* → *TestNG*. |
+| **Аннотации** | `@Test`, `@BeforeSuite`, `@AfterMethod` и т.д. – TestNG автоматически распознает их. |
+| **testng.xml** | Создайте файл `testng.xml` в корне проекта, укажите `<suite>`, `<test>`, `<classes>`. Запустите его как *TestNG configuration*. |
+| **Command line** | `mvn test` (Maven) или `gradle test`. IDE покажет результаты в консоли. |
+
+---
+
+### 4. Что видишь в IDE после запуска
+
+| Что показывается | Как это выглядит |
+|------------------|------------------|
+| **Панель результатов** | Список тестов, их статус (PASS/FAIL), время выполнения. |
+| **График** | Быстрый обзор количества пройденных/непройденных тестов. |
+| **Отладка** | Можно ставить брейкпоинты в тестах, просматривать переменные. |
+
+---
+
+### 5. Быстрый чек‑лист
+
+1. **Добавь зависимость** `testng` в проект (Maven/Gradle/ручной JAR).
+2. **Установи плагин** TestNG в IDE (если нужен).
+3. **Создай/открой `testng.xml`** (необязательно).
+4. **Запусти тест** через *Run → TestNG*.
+5. **Проверь отчёт** – убедись, что все тесты найдены и выполнены.
+
+---
+
+> **Кратко**: подключи TestNG как зависимость, установи плагин в IDE, запускай тесты через *Run/Debug* и смотри результаты прямо в редакторе.
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Интеграция с Maven/Gradle</summary>
+    <p style='font-size: 14px'>
+
+## TestNG + Maven / Gradle
+
+### 1️⃣ Maven
+
+| Что нужно | Как сделать |
+|-----------|-------------|
+| **Зависимость TestNG** | Добавить в `pom.xml` в раздел `<dependencies>` |
+| **Запуск тестов** | С помощью плагина **Surefire** (уже включён в стандартный `pom`) |
+
+#### Пример `pom.xml`
+
+```xml
+<project …>
+  …
+  <dependencies>
+    <!-- TestNG -->
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>7.6.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Surefire – запускает тесты в фазе test -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M9</version>
+        <configuration>
+          <!-- если используете testng.xml -->
+          <suiteXmlFiles>
+            <suiteXmlFile>testng.xml</suiteXmlFile>
+          </suiteXmlFiles>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+```
+
+#### Запуск
+
+```bash
+# Сборка и запуск тестов
+mvn clean test
+```
+
+---
+
+### 2️⃣ Gradle
+
+| Что нужно | Как сделать |
+|-----------|-------------|
+| **Зависимость TestNG** | Добавить в `build.gradle` в секцию `dependencies` |
+| **Запуск тестов** | Встроенный `test` task использует Surefire‑подобный механизм, но можно настроить `testng.xml` |
+
+#### Пример `build.gradle` (Groovy)
+
+```groovy
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.testng:testng:7.6.1'
+}
+
+test {
+    // Если нужен testng.xml
+    useTestNG {
+        suites 'testng.xml'
+    }
+}
+```
+
+#### Запуск
+
+```bash
+# Сборка и запуск тестов
+gradle clean test
+```
+
+---
+
+### 3️⃣ Что ещё важно
+
+| Пункт | Кратко |
+|-------|--------|
+| **testng.xml** | Файл конфигурации, где можно задать группы, порядок, параметры. В Maven/Gradle указывайте путь в конфигурации плагина/задачи. |
+| **Группы** | `@Test(groups = {\"smoke\"})` – удобно фильтровать, запускайте `mvn test -Dgroups=smoke` или `gradle test --tests *.*`. |
+| **Отчёты** | Surefire/Gradle генерируют `target/surefire-reports` / `build/test-results`. Для красивых HTML‑отчётов можно подключить Allure. |
+| **Параллельный запуск** | В Surefire: `<parallel>methods</parallel>`, `<threadCount>4</threadCount>`. В Gradle: `maxParallelForks = 4`. |
+
+---
+
+### 4️⃣ Быстрые советы
+
+* **Проверка** – добавьте `@BeforeSuite`/`@AfterSuite` для логирования начала/конца тестов.
+* **Параметры** – передавайте через `@Parameters` и `@Optional`.
+* **CI** – в Jenkins/TeamCity просто вызывайте `mvn test` или `gradle test`; отчёты автоматически сохранятся.
+
+---
+
+**Итого**:
+1. Добавьте зависимость TestNG.
+2. Настройте плагин/задачу для запуска (`maven-surefire-plugin` / `test` task).
+3. При необходимости укажите `testng.xml`.
+4. Запускайте `mvn clean test` или `gradle clean test`.
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Best Practices</summary>
+    <p style='font-size: 14px'>
+
+## TestNG – Best Practices
+*(для интервью по автоматизации тестирования на Java)*
+
+| # | Практика | Краткое объяснение | Как применить |
+|---|----------|--------------------|---------------|
+| 1 | **Используй аннотации правильно** | `@Test`, `@BeforeMethod`, `@AfterMethod`, `@BeforeClass`, `@AfterClass` – каждый из них имеет свой смысл. | Не смешивай `@BeforeMethod` с `@BeforeClass` для одного и того же теста. |
+| 2 | **Разделяй тесты по группам** | `@Test(groups = {\"smoke\", \"regression\"})` – позволяет запускать нужный набор. | В `testng.xml` задавай `<groups>` → `<run>` → `<include name=\"smoke\"/>`. |
+| 3 | **Используй DataProvider для параметризации** | Один тест может работать с разными наборами данных. | `@DataProvider(name=\"dp\")` + `@Test(dataProvider=\"dp\")`. |
+| 4 | **Не делай тесты зависимыми друг от друга** | Каждое тестовое действие должно быть независимым. | Избегай `dependsOnMethods`; если нужен порядок, создавай отдельный тест‑сценарий. |
+| 5 | **Изолируй состояние** | В `@BeforeMethod` очищай/создавай окружение, в `@AfterMethod` возвращай его в исходное состояние. | Очистка БД, логов, файлов, сессий. |
+| 6 | **Используй Assert/SoftAssert правильно** | `Assert` останавливает тест после первой ошибки. `SoftAssert` собирает все ошибки и выводит их в конце. | Для UI‑тестов, где хочется проверить несколько полей, используйте `SoftAssert`. |
+| 7 | **Пиши читаемые сообщения об ошибках** | `Assert.assertEquals(actual, expected, \"Значение не совпало: expected=..., actual=...\")`. | Помогает быстрее понять причину падения. |
+| 8 | **Организуй тесты в пакеты** | `ui`, `api`, `db`, `utils` – разделяй по типу. | Упрощает поиск и поддержку. |
+| 9 | **Добавляй слушатели (Listeners)** | `ITestListener`, `IInvokedMethodListener` – логирование, скриншоты, отчёты. | В `testng.xml` указывай `<listeners>`. |
+|10 | **Конфигурируй parallel execution** | `parallel=\"tests\"` или `methods` + `thread-count`. | Ускоряет выполнение, но проверь, что тесты действительно независимы. |
+|11 | **Не пишите “hard‑coded” паузы** | `Thread.sleep()` – плохая практика. | Используйте `WebDriverWait`, `ExpectedConditions`. |
+|12 | **Пиши модульные тесты, а не E2E** | Модульный тест быстрее и проще. | E2E тесты – только при необходимости. |
+|13 | **Используй Page Object Model (если UI)** | Отделяет логику от тестов. | В `Page` классе храните методы `click()`, `enter()`. |
+|14 | **Проверяй только то, что важно** | Тесты не должны проверять всю логику, только критические пути. | Это ускорит и сделает тесты более надёжными. |
+|15 | **Регулярно обновляй тесты** | При изменениях в приложении обновляйте тесты, а не игнорируйте. | Включите CI, чтобы тесты запускались автоматически. |
+
+### Мини‑пример
+
+```java
+public class LoginTests {
+
+    @BeforeMethod
+    public void setUp() {
+        driver = WebDriverFactory.getDriver();
+        driver.get(\"https://example.com/login\");
+    }
+
+    @Test(groups = {\"smoke\"})
+    public void validLogin() {
+        LoginPage login = new LoginPage(driver);
+        login.enterUsername(\"user\");
+        login.enterPassword(\"pass\");
+        login.clickLogin();
+
+        Assert.assertTrue(homePage.isDisplayed(), \"Home page should be displayed\");
+    }
+
+    @Test(dataProvider = \"credentials\", groups = {\"regression\"})
+    public void loginWithDifferentUsers(String user, String pass, boolean shouldSucceed) {
+        LoginPage login = new LoginPage(driver);
+        login.enterUsername(user);
+        login.enterPassword(pass);
+        login.clickLogin();
+
+        if (shouldSucceed) {
+            Assert.assertTrue(homePage.isDisplayed(), \"Login should succeed\");
+        } else {
+            Assert.assertTrue(login.isErrorDisplayed(), \"Error message should appear\");
+        }
+    }
+
+    @DataProvider(name = \"credentials\")
+    public Object[][] credentials() {
+        return new Object[][]{
+                {\"user\", \"pass\", true},
+                {\"user\", \"wrong\", false}
+        };
+    }
+
+    @AfterMethod
+    public void tearDown() {
+        driver.quit();
+    }
+}
+```
+
+### testng.xml
+
+```xml
+<!DOCTYPE suite SYSTEM \"http://testng.org/testng-1.0.dtd\">
+<suite name=\"AutomationSuite\" parallel=\"tests\" thread-count=\"4\">
+    <listeners>
+        <listener class-name=\"com.example.listeners.CustomListener\"/>
+    </listeners>
+
+    <test name=\"SmokeTests\">
+        <groups>
+            <run>
+                <include name=\"smoke\"/>
+            </run>
+        </groups>
+        <classes>
+            <class name=\"com.example.tests.LoginTests\"/>
+        </classes>
+    </test>
+</suite>
+```
+
+---
+
+**Ключевые моменты для интервью:**
+
+1. **Чистый код** – аннотации, группы, DataProvider.
+2. **Изоляция** – `@BeforeMethod`/`@AfterMethod`.
+3. **Параллелизм** – конфигурация, но только при независимых тестах.
+4. **Отчёты** – Listeners, SoftAssert.
+5. **Поддерживаемость** – пакеты, Page Object, регулярные обновления.
+</p>
+    </details>
+<details style='margin-left: 20px'>
+    <summary style='font-size: 16px'>Common pitfalls</summary>
+    <p style='font-size: 14px'>
+
+## Common pitfalls when using TestNG (Java)
+
+| Категория | Что обычно делаем не так | Как исправить |
+|-----------|--------------------------|---------------|
+| **Аннотации** | <ul><li>Используем `@BeforeSuite/@AfterSuite` вместо `@BeforeClass/@AfterClass` для инициализации/чистки драйвера.</li><li>Неправильный порядок: `@Test(priority)` вместо `dependsOnMethods`.</li><li>Оставляем `@Test(enabled=false)` в коде, забывая включить обратно.</li></ul> | <ul><li>Инициализируйте драйвер в `@BeforeClass` и закрывайте в `@AfterClass`.</li><li>Определяйте порядок через зависимости (`dependsOnMethods`) и не полагайтесь на `priority`.</li><li>Удаляйте `enabled=false` после отладки.</li></ul> |
+| **Параллелизм** | <ul><li>Параллельный запуск, но драйвер хранится в статическом поле → гонки.</li><li>`parallel=\"methods\"` в XML, но объекты не thread‑safe.</li></ul> | <ul><li>Используйте `ThreadLocal<WebDriver>` или создавайте драйвер в `@BeforeMethod`/`@BeforeClass` для каждого потока.</li><li>Проверяйте, что все используемые объекты (DB, API‑клиенты) thread‑safe.</li></ul> |
+| **DataProvider** | <ul><li>Неправильное имя провайдера (`@Test(dataProvider=\"dp\")` но провайдер называется `dataProvider`).</li><li>Неполный набор данных → часть тестов пропадает.</li><li>Провайдер не помечен `parallel=true`, но тесты запускаются параллельно.</li></ul> | <ul><li>Убедитесь, что имя провайдера совпадает.</li><li>Проверяйте, что `Object[][]` содержит все нужные кейсы.</li><li>Добавьте `parallel=true` в аннотацию провайдера, если запускаете параллельно.</li></ul> |
+| **Группы** | <ul><li>Используем `dependsOnGroups` без реальной зависимости → циклические зависимости.</li><li>Логика «тесты X» → «тесты Y» в XML не отражает реальных связей.</li></ul> | <ul><li>Проверяйте, что группы действительно зависят друг от друга.</li><li>В XML указывайте только реально нужные группы.</li></ul> |
+| **Параметры** | <ul><li>Не передаём параметры из `testng.xml` → NullPointerException.</li><li>Типы параметров не совпадают (строка → int).</li></ul> | <ul><li>Убедитесь, что `<parameter name=\"...\" value=\"...\"/>` совпадает с `@Parameters({\"name\"})`.</li><li>Проверяйте типы и используйте `@Optional` для дефолтных значений.</li></ul> |
+| **Ожидания** | <ul><li>Сразу ставим `Thread.sleep(2000)` вместо явного ожидания.</li><li>Надёжный `implicit wait` → `StaleElementReferenceException`.</li></ul> | <ul><li>Используйте `WebDriverWait` + ExpectedConditions.</li><li>Обновляйте локаторы и проверяйте, что элемент видим/кликабелен.</li></ul> |
+| **Ассерты** | <ul><li>Проверяем только одно условие, остальные игнорируем.</li><li>Неправильный порядок аргументов в `assertEquals` → нечёткое сообщение.</li></ul> | <ul><li>Проверяйте все критические свойства (текст, атрибуты, состояние).</li><li>Пишите `assertEquals(expected, actual)` для читаемости.</li></ul> |
+| **Обработка исключений** | <ul><li>Ожидаем исключение через `expectedExceptions`, но в коде обрабатываем его в `try/catch` → тест всегда проходит.</li></ul> | <ul><li>Если ожидаете исключение, не оборачивайте его в `try/catch`.</li><li>Используйте `assertThrows` в JUnit‑5 либо `expectedExceptions` в TestNG.</li></ul> |
+| **Отчёты и слушатели** | <ul><li>Не подключаем `ITestListener`/`IReporter` → отчёты неполные.</li><li>Пользуемся только стандартным HTML‑отчётом, но он не содержит скриншотов.</li></ul> | <ul><li>Добавьте собственный `ITestListener` (или Allure/ExtentReports) для более подробных логов.</li><li>Установите `listener` в `testng.xml` или в аннотации `@Listeners`.</li></ul> |
+| **Интеграция с Maven/Surefire** | <ul><li>Не указываем `<suiteXmlFiles>` → тесты не запускаются.</li><li>Параллельный режим в Surefire конфликтует с TestNG `parallel` атрибутом.</li></ul> | <ul><li>В `pom.xml` добавьте `<suiteXmlFiles>` и укажите путь к `testng.xml`.</li><li>Если хотите параллельный запуск, задайте `parallel=\"methods\"` в XML и `threadCount` в Surefire.</li></ul> |
+| **Состояние приложения** | <ul><li>Не очищаем БД/кэш после теста → следующее тестирование зависит от предыдущего.</li><li>Используем один пользовательский аккаунт → проблемы с одновременным использованием.</li></ul> | <ul><li>В `@AfterMethod` удаляйте/обнуляйте данные (или используйте транзакции).</li><li>Создавайте уникальные данные/авторизационные токены для каждого теста.</li></ul> |
+| **Плохая архитектура** | <ul><li>Грязный код: логи, `System.out.println`, дублирование шагов.</li><li>Отсутствие Page Object/BaseTest → трудно поддерживать.</li></ul> | <ul><li>Создайте базовый класс `BaseTest` (инициализация драйвера, логгирование).</li><li>Переходите к паттерну Page Object и использованию `PageFactory`.</li></ul> |
+
+---
+
+### Быстрый чек‑лист перед запуском
+
+1. **Аннотации**: `@BeforeClass/@AfterClass` → инициализация/чистка драйвера.
+2. **Параллелизм**: `ThreadLocal` + `parallel=\"methods\"` + `threadCount`.
+3. **DataProvider**: имя совпадает, `parallel=true`, полный набор данных.
+4. **Группы**: реальная зависимость, без циклов.
+5. **Параметры**: `<parameter>` → `@Parameters`.
+6. **Ожидания**: `WebDriverWait`, не `Thread.sleep`.
+7. **Ассерты**: читаемые аргументы, проверка всех ключевых свойств.
+8. **Отчёты**: подключён `ITestListener`/Allure/ExtentReports.
+9. **Maven**: `<suiteXmlFiles>`, `parallel` в Surefire.
+10. **Состояние**: очистка БД/кэша, уникальные данные.
+11. **Архитектура**: BaseTest, Page Object, DRY.
 </p>
     </details>
 </details>
